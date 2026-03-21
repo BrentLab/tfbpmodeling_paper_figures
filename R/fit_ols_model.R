@@ -157,7 +157,7 @@ fit_ols_model <- function(regulator, responses, predictors, cubic_model = FALSE,
         annotate(
             "text",
             x = Inf, y = Inf,
-            label = sprintf("R² = %.3f", summary(fit)$r.squared),
+            label = sprintf("R^2 = %.3f", summary(fit)$r.squared),
             hjust = 1.1, vjust = 1.5,
             size = 4,
             fontface = "italic"

@@ -1,0 +1,30 @@
+[
+    {
+        "interactor": "SFL1:FZF1",
+        "variant": "FZF1",
+        "r2_lasso_model": 0.11235835789183946,
+        "coef_interactor": -0.06655872089387499,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "SFL1:SWI4",
+        "variant": "SWI4",
+        "r2_lasso_model": 0.11235835789183946,
+        "coef_interactor": -0.05294642013144556,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "SFL1:OPI1",
+        "variant": "OPI1",
+        "r2_lasso_model": 0.11235835789183946,
+        "coef_interactor": -0.10543382704522612,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "SFL1:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.11235835789183946,
+        "coef_interactor": 0.0038728424821185933,
+        "coef_main_effect": 0.22053925876362906
+    }
+]

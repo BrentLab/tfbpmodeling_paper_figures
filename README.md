@@ -1,7 +1,6 @@
 # tfbpmodeling_paper_figures
 
 Publication figures for the tfbpmodeling yeast TF regulatory network paper.
-Refactored from `~/projects/glmnetstrap/tmp/workflow_result_analysis_20250805.Rmd`.
 
 ## Structure
 

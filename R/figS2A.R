@@ -101,12 +101,16 @@ save_figS2A <- function(path, input_data, width = 9, height = 5,
 # Standalone entry point
 # ---------------------------------------------------------------------------
 if (sys.nframe() == 0L) {
+    data_pull_date       <- "20250805"
+    tfbpmodeling_version <- "1.0.0"
+
     # in general, just run this once before running any fig scripts
     # source(here("R/create_predictors_response_lists.R"))
 
     input_data <- pull_predictor_response_lists(pull_data = FALSE, date = "20250805")
 
-    out_path <- here("plots/figS2A.svg")
+    out_path <- here("plots", data_pull_date, tfbpmodeling_version, "figS2A.svg")
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
     save_figS2A(out_path, input_data)
     message("Saved: ", out_path)
 }

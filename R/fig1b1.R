@@ -95,6 +95,9 @@ save_fig1b1 <- function(path, long_corr_pearson_res, replicate_corr_comp_df,
 # (produced by prepare_data.R)
 # ---------------------------------------------------------------------------
 if (sys.nframe() == 0L) {
+    data_pull_date       <- "20250805"
+    tfbpmodeling_version <- "1.0.0"
+
     library(corrr)
     # in general, run this first
     # source(here("R/create_predictors_response_lists.R"))
@@ -220,7 +223,8 @@ if (sys.nframe() == 0L) {
             labels = c("Abs(enrichment)", "-log10(pvalue)", "LRB")
         ))
 
-    out_path <- here("plots/fig1b1.svg")
+    out_path <- here("plots", data_pull_date, tfbpmodeling_version, "fig1b1.svg")
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
     save_fig1b1(out_path, long_corr_pearson_res, replicate_corr_comp_df)
     message("Saved: ", out_path)
 }

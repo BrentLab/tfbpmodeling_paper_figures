@@ -1,0 +1,9 @@
+[
+    {
+        "interactor": "YOX1:WTM1",
+        "variant": "WTM1",
+        "r2_lasso_model": 0.02985607132207002,
+        "coef_interactor": -0.06963790594857243,
+        "coef_main_effect": -0.0
+    }
+]

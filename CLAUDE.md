@@ -45,7 +45,7 @@ All figure scripts themselves should be pure R after the data pipeline runs.
 | `fig1cd.R` | R² linear vs cubic, 4 data transforms | `r2_summary_df` |
 | `fig1efgh.R` | Scatter panels linear+cubic fits for a pTF | `uni_modeling_results`, `regulator` |
 | `fig2bc.R` | Bootstrap coef boxplots, Stage 1 vs Stage 2 | `all_data_coefs_list`, `topn_coefs_list`, `ci_df_all_data`, `ci_df_topn`, `regulator` |
-| `fig2d.R` | Interactor counts per stage (lineplot/barplot/boxplot) | `all_vs_topn_comp_df`, `stage3_consistent_df` |
+| `fig2d.R` | Interactor counts per stage (lineplot/barplot/boxplot) | `stage_comp_df` |
 | `fig2e.R` | CV variance explained across stages | `stages_comp_r2_df` |
 | `figS2A.R` | PDR3×GAL4 cubic + interaction scatter | `input_data`, `pTF`, `mTF` |
 

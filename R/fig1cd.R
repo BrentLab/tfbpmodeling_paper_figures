@@ -1,6 +1,6 @@
 # fig1cd.R
 #
-# Faceted boxplot + jitter of variance-explained (R²) for linear vs cubic OLS
+# Faceted boxplot + jitter of variance-explained (R^2) for linear vs cubic OLS
 # models across four predictor/response data transforms. Legend is inset via
 # cowplot.
 #
@@ -12,7 +12,7 @@
 #   model         <chr>   "degree1" | "degree3"
 #   data_variant  <chr>   one of the four transform names (see notebook)
 #   regulator     <chr>   pTF symbol
-#   r2            <dbl>   R²
+#   r2            <dbl>   R^2
 #   fstat_pval    <dbl>   F-statistic p-value
 #
 # It is built in the notebook (lines ~580-605) by running fit_ols_model()
@@ -28,7 +28,7 @@ source(here("R/theme_ptf.R"))
 #
 # Parameters
 # ----------
-# r2_summary_df   Tidy R² data frame described in the header.
+# r2_summary_df   Tidy R^2 data frame described in the header.
 # ylim            Numeric length-2 vector for y-axis clip (default 0–25%).
 # base_size       Font size passed to theme_ptf().
 # legend_x, legend_y  Fractional position for the inset legend (cowplot).
@@ -121,6 +121,9 @@ save_fig1cd <- function(path, r2_summary_df, width = 9, height = 7,
 # Standalone entry point
 # ---------------------------------------------------------------------------
 if (sys.nframe() == 0L) {
+    data_pull_date       <- "20250805"
+    tfbpmodeling_version <- "1.0.0"
+
     # in general, just run this once before running any fig<> file
     # source(here("R/create_predictors_response_lists.R"))
     source(here("R/fit_ols_model.R"))
@@ -181,7 +184,8 @@ if (sys.nframe() == 0L) {
         })
     })
 
-    out_path <- here("plots/fig1cd.svg")
+    out_path <- here("plots", data_pull_date, tfbpmodeling_version, "fig1cd.svg")
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
     save_fig1cd(out_path, r2_summary_df)
     message("Saved: ", out_path)
 }

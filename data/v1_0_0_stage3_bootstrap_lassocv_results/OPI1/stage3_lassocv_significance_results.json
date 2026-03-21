@@ -1,0 +1,30 @@
+[
+    {
+        "interactor": "OPI1:FZF1",
+        "variant": "FZF1",
+        "r2_lasso_model": 0.20019907880667487,
+        "coef_interactor": -0.058672792786273006,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "OPI1:INO4",
+        "variant": "INO4",
+        "r2_lasso_model": 0.20019907880667487,
+        "coef_interactor": 0.0,
+        "coef_main_effect": 0.15536615364807146
+    },
+    {
+        "interactor": "OPI1:INO2",
+        "variant": "INO2",
+        "r2_lasso_model": 0.20019907880667487,
+        "coef_interactor": 0.10428968967003358,
+        "coef_main_effect": 0.06897705264241283
+    },
+    {
+        "interactor": "OPI1:PPR1",
+        "variant": "PPR1",
+        "r2_lasso_model": 0.20019907880667487,
+        "coef_interactor": -0.08181494502803131,
+        "coef_main_effect": -0.0
+    }
+]

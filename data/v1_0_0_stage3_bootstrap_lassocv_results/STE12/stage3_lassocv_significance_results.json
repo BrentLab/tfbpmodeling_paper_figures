@@ -1,0 +1,9 @@
+[
+    {
+        "interactor": "STE12:PGD1",
+        "variant": "PGD1",
+        "r2_lasso_model": 0.029080265352406043,
+        "coef_interactor": 0.07957491718513725,
+        "coef_main_effect": 0.0
+    }
+]

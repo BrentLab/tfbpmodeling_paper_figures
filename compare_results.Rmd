@@ -1,0 +1,164 @@
+---
+title: "compare_results"
+output: html_document
+---
+
+```{r setup}
+library(tidyverse)
+library(glue)
+library(here)
+library(knitr)
+
+source(here("R/compare_results.R"))
+source(here("R/prepare_data.R"))
+```
+
+## Input
+
+```{r input}
+models = list(
+    old = basename(list.dirs("~/htcf_ref/data/yeast_database_modelling/results/20250805/results_20250805_residuals",
+                     recursive = FALSE)),
+    new = basename(list.dirs("~/htcf_ref/data/yeast_database_modelling/results/20250805/v1.0.0/results_20250805_residuals",
+                   recursive = FALSE))
+)
+
+get_paths = function(model,
+                     basepath_old, 
+                     stage3_filename_old = c("interactor_vs_main_result.json",
+                                         "stage3_lassocv_significance_results.json"),
+                     basepath_new,
+                     stage3_filename_new = c("interactor_vs_main_result.json",
+                                         "stage3_lassocv_significance_results.json")){
+    
+    stage3_filename_old = match.arg(stage3_filename_old)
+    stage3_filename_new = match.arg(stage3_filename_new)
+    
+    list(
+        old = list(
+            file.path(basepath_old, model, "all_data_significant_98-0.json"),
+            file.path(basepath_old, model, "topn_significant_90-0.json"),
+            file.path(basepath_old, model, stage3_filename_old)),
+        new = list(
+            file.path(basepath_new, model, "all_data_significant_98-0.json"),
+            file.path(basepath_new, model, "topn_significant_90-0.json"),
+            file.path(basepath_new, model, stage3_filename_new))
+    )
+    
+}
+
+# Populate path_list here. Structure:
+#   list(
+#     AFT1 = list(
+#       old = list("path/v0/.../all_data_significant_98-0.json",
+#                  "path/v0/.../topn_significant_90-0.json",
+#                  "path/v0/.../stage3_lassocv_significance_results.json"),
+#       new = list("path/v1/.../all_data_significant_98-0.json",
+#                  "path/v1/.../topn_significant_90-0.json",
+#                  "path/v1/.../stage3_lassocv_significance_results.json")
+#     ),
+#     ...
+#   )
+path_list = map(models$old, get_paths,
+                "~/htcf_ref/data/yeast_database_modelling/results/20250805/results_20250805_residuals",
+                "interactor_vs_main_result.json",
+                "~/htcf_ref/data/yeast_database_modelling/results/20250805/v1.0.0/results_20250805_residuals",
+                "stage3_lassocv_significance_results.json")
+names(path_list) = models$old
+
+
+```
+
+## Load results
+
+```{r load}
+loaded <- load_stage_results(path_list)
+```
+
+## Run comparisons
+
+```{r compare}
+stages <- c("stage1", "stage2", "stage3")
+
+compare_fns <- list(
+    stage1 = compare_stage1,
+    stage2 = compare_stage2,
+    stage3 = compare_stage3
+)
+
+# For each regulator × stage, run the appropriate comparison function and
+# collect the per-interactor agreement tibble.
+comparisons <- imap_dfr(loaded, function(reg_entry, reg_name) {
+    map_dfr(stages, function(stage) {
+        a <- reg_entry[[1]][[stage]]
+        b <- reg_entry[[2]][[stage]]
+        compare_fns[[stage]](a, b) %>%
+            mutate(regulator = reg_name, stage = stage, .before = everything())
+    })
+})
+```
+
+## Summary: identical vs different
+
+```{r summary}
+comparison_summary <- comparisons %>%
+    group_by(regulator, stage) %>%
+    summarise(
+        n_both   = sum(agreement == "both"),
+        n_only_a = sum(agreement == "only_a"),
+        n_only_b = sum(agreement == "only_b"),
+        identical = n_only_a == 0 & n_only_b == 0,
+        .groups = "drop"
+    ) %>%
+    arrange(stage, !identical, regulator)
+
+comparison_summary %>% kable()
+```
+
+```{r summary-counts}
+comparison_summary %>%
+    count(stage, identical) %>%
+    pivot_wider(names_from = identical, values_from = n,
+                names_prefix = "identical_") %>%
+    rename(n_different = identical_FALSE, n_identical = identical_TRUE) %>%
+    replace_na(list(n_different = 0L, n_identical = 0L)) %>%
+    kable()
+```
+
+## Differences detail
+
+Regulators where the two versions disagree for at least one stage.
+
+```{r differences}
+different_cases <- comparisons %>%
+    filter(agreement != "both") %>%
+    select(regulator, stage, interactor, agreement,
+           starts_with("coef"), starts_with("sign"))  # coef/sign cols present for stage3 only
+
+if (nrow(different_cases) == 0) {
+    cat("All regulators are identical across both versions for all stages.\n")
+} else {
+    different_cases %>%
+        arrange(stage, regulator, agreement, interactor) %>%
+        kable()
+}
+```
+
+```{r differences-by-stage}
+# Per-stage breakdown of disagreements
+for (s in stages) {
+    stage_diffs <- different_cases %>% filter(stage == s)
+    if (nrow(stage_diffs) == 0) next
+
+    cat(glue("\n### {s}: {nrow(stage_diffs)} differing predictor(s) across ",
+             "{n_distinct(stage_diffs$regulator)} regulator(s)\n\n"))
+
+    stage_diffs %>%
+        select(regulator, interactor, agreement) %>%
+        arrange(regulator, agreement) %>%
+        kable() %>%
+        print()
+}
+```
+conclusion: see https://github.com/BrentLab/tfbpmodeling/issues/57, the
+floating point precision issue is a problem. It is resolved by stage3

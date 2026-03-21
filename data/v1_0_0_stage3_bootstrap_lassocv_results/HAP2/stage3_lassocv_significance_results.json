@@ -1,0 +1,30 @@
+[
+    {
+        "interactor": "HAP2:MIG1",
+        "variant": "MIG1",
+        "r2_lasso_model": 0.06291935215217781,
+        "coef_interactor": 0.0798672984619635,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "HAP2:OPI1",
+        "variant": "OPI1",
+        "r2_lasso_model": 0.06291935215217781,
+        "coef_interactor": -0.04379566541594464,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "HAP2:DAT1",
+        "variant": "DAT1",
+        "r2_lasso_model": 0.06291935215217781,
+        "coef_interactor": -0.06292746870446413,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "HAP2:FKH1",
+        "variant": "FKH1",
+        "r2_lasso_model": 0.06291935215217781,
+        "coef_interactor": -0.0457284857682461,
+        "coef_main_effect": -0.0
+    }
+]

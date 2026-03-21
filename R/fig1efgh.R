@@ -2,7 +2,7 @@
 #
 # Four-panel scatter plot for a single pTF showing the raw data with both a
 # linear (blue) and cubic (red) fit, across all four predictor/response data
-# transforms. R² annotations are placed in the top-right corner of each panel.
+# transforms. R^2 annotations are placed in the top-right corner of each panel.
 #
 # Usage (import into notebook):
 #   source(here("R/paper_figures/fig1efgh.R"))
@@ -132,6 +132,9 @@ save_fig1efgh <- function(path, uni_modeling_results, width = 20, height = 4,
 # Standalone entry point
 # ---------------------------------------------------------------------------
 if (sys.nframe() == 0L) {
+    data_pull_date       <- "20250805"
+    tfbpmodeling_version <- "1.0.0"
+
     # in general, run this once before running any of the fig scripts
     # source(here("R/create_predictors_response_lists.R"))
     source(here("R/fit_ols_model.R"))
@@ -175,7 +178,8 @@ if (sys.nframe() == 0L) {
         })
     })
 
-    out_path <- here("plots/fig1efgh.svg")
+    out_path <- here("plots", data_pull_date, tfbpmodeling_version, "fig1efgh.svg")
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
     save_fig1efgh(out_path, uni_modeling_results)
     message("Saved: ", out_path)
 }

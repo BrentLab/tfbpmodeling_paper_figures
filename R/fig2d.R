@@ -1,21 +1,21 @@
 # fig2d.R
 #
 # Distribution of the number of interactors per TF model across pipeline stages
-# (Stage 1 = all-data 98% CI, Stage 2 = top-N 90% CI, Stage 3 = final lasso).
-# Three visual variants via the `variant` argument:
+# (Stage 1 = all-data 98% CI, Stage 2 = top-N 90% CI, Stage 3 = chosen column).
+# Three visual variants via the `plot_variant` argument:
 #   "lineplot"  (default / canonical)
 #   "barplot"   grouped bars
 #   "boxplot"   boxplot + jitter
 #
 # Usage (import into notebook):
 #   source(here("R/fig2d.R"))
-#   plt <- make_fig2d(all_vs_topn_comp_df, stage3_consistent_df)
+#   plt <- make_fig2d(stage_comp_df, stage3_col = "stage3_lassocv_n_interactors")
 #
-# `all_vs_topn_comp_df` columns: regulator_symbol, topn_n_interactors,
-#   all_data_n_interactors, diff
+# `stage_comp_df` columns: regulator_symbol, all_data_n_interactors,
+#   topn_n_interactors, stage3_lassocv_n_interactors,
+#   stage3_bootstrap_n_interactors (may be NA if bootstrap CI not available)
 #
-# `stage3_consistent_df` is stage4_20250805_residuals filtered to
-#   consistent == TRUE and complete.cases(), columns: model, interactor, ...
+# `stage3_col` selects which stage3 count column to use as the Stage 3 series.
 
 library(here)
 library(tidyverse)
@@ -24,24 +24,19 @@ source(here("R/theme_ptf.R"))
 # ---------------------------------------------------------------------------
 # Internal: shared long-format data prep
 # ---------------------------------------------------------------------------
-.build_fig2d_long <- function(all_vs_topn_comp_df, stage3_consistent_df) {
-    all_vs_topn_comp_df %>%
-        select(regulator_symbol, topn_n_interactors, all_data_n_interactors) %>%
-        rename(model = regulator_symbol) %>%
-        left_join(
-            stage3_consistent_df %>%
-                group_by(model) %>%
-                count(name = "stage4_n_interactors"),
-            by = "model"
-        ) %>%
-        replace_na(list(stage4_n_interactors = 0)) %>%
+.build_fig2d_long <- function(stage_comp_df, stage3_col) {
+    stage_comp_df %>%
+        select(model = regulator_symbol,
+               all_data_n_interactors,
+               topn_n_interactors,
+               stage3_n_interactors = all_of(stage3_col)) %>%
         pivot_longer(-model, names_to = "stage", values_to = "n_interactors") %>%
         mutate(
             stage = factor(
                 stage,
                 levels = c("all_data_n_interactors",
                            "topn_n_interactors",
-                           "stage4_n_interactors"),
+                           "stage3_n_interactors"),
                 labels = c("stage1", "stage2", "stage3")
             )
         )
@@ -51,13 +46,14 @@ source(here("R/theme_ptf.R"))
 # make_fig2d()
 # ---------------------------------------------------------------------------
 make_fig2d <- function(
-        all_vs_topn_comp_df,
-        stage3_consistent_df,
-        variant   = c("lineplot", "barplot", "boxplot"),
-        base_size = 18
+        stage_comp_df,
+        stage3_col    = c("stage3_lassocv_n_interactors", "stage3_bootstrap_n_interactors"),
+        plot_variant  = c("barplot", "lineplot", "boxplot"),
+        base_size     = 18
 ) {
-    variant <- match.arg(variant)
-    df_long <- .build_fig2d_long(all_vs_topn_comp_df, stage3_consistent_df)
+    plot_variant <- match.arg(plot_variant)
+    stage3_col = match.arg(stage3_col)
+    df_long <- .build_fig2d_long(stage_comp_df, stage3_col)
 
     stage_colors <- c(
         "stage1" = "#F8766D",
@@ -65,7 +61,7 @@ make_fig2d <- function(
         "stage3" = "#619CFF"
     )
 
-    if (variant == "lineplot") {
+    if (plot_variant == "lineplot") {
         df_plot <- df_long %>%
             count(stage, n_interactors) %>%
             complete(stage, n_interactors = 0:11, fill = list(n = 0)) %>%
@@ -96,7 +92,7 @@ make_fig2d <- function(
             ) +
             labs(x = "Number of interactors", y = "Number of models")
 
-    } else if (variant == "barplot") {
+    } else if (plot_variant == "barplot") {
         df_plot <- df_long %>%
             count(stage, n_interactors) %>%
             complete(stage, n_interactors, fill = list(n = 0))
@@ -137,53 +133,21 @@ make_fig2d <- function(
 # ---------------------------------------------------------------------------
 # save_fig2d()
 # ---------------------------------------------------------------------------
-save_fig2d <- function(path, all_vs_topn_comp_df, stage3_consistent_df,
+save_fig2d <- function(path, stage_comp_df,
                         width = 8, height = 7, bg = "white", ...) {
-    plt <- make_fig2d(all_vs_topn_comp_df, stage3_consistent_df, ...)
+    plt <- make_fig2d(stage_comp_df, ...)
     ggsave(path, plt, bg = bg, width = width, height = height)
     invisible(plt)
 }
 
 # ---------------------------------------------------------------------------
-# Standalone entry point
-# Requires: data/ci_df_all_data_20250805.rds, data/ci_df_topn_20250805.rds,
-#           data/stage4_results_residuals_20250805.rds
-# (produced by prepare_data.R)
+# Standalone entry point — sources prepare_data.R to get stage_comp_df
 # ---------------------------------------------------------------------------
 if (sys.nframe() == 0L) {
-    ci_all  <- readRDS(here("data/ci_df_all_data_20250805.rds"))
-    ci_topn <- readRDS(here("data/ci_df_topn_20250805.rds"))
-    stage4  <- readRDS(here("data/stage4_results_residuals_20250805.rds"))
+    source(here("R/prepare_data.R"))
 
-    # ---- Interactor counts per stage -------------------------------------
-    significant_all_data_98_df <- ci_all %>%
-        group_by(regulator_symbol = regulator) %>%
-        summarise(all_data_n_interactors = n(), .groups = "drop")
-
-    significant_topn_90_df <- ci_topn %>%
-        group_by(regulator_symbol = regulator) %>%
-        summarise(topn_n_interactors = n(), .groups = "drop")
-
-    # ---- Flag consistent interactors (sign matches between stages) -------
-    topn_signs <- ci_topn %>%
-        select(model = regulator, interactor, topn_sign = sign)
-
-    stage4_residuals <- stage4 %>%
-        filter(!is.na(coef_interactor)) %>%
-        left_join(topn_signs, by = c("model", "interactor")) %>%
-        mutate(consistent = sign(coef_interactor) == topn_sign)
-
-    # ---- Build function inputs -------------------------------------------
-    all_vs_topn_comp_df <- significant_topn_90_df %>%
-        full_join(significant_all_data_98_df, by = "regulator_symbol") %>%
-        replace_na(list(all_data_n_interactors = 0L, topn_n_interactors = 0L)) %>%
-        mutate(diff = topn_n_interactors - all_data_n_interactors)
-
-    stage3_consistent_df <- stage4_residuals %>%
-        filter(consistent, complete.cases(.))
-
-    # ---- Save figure ------------------------------------------------------
-    out_path <- here("plots/fig2d.svg")
-    save_fig2d(out_path, all_vs_topn_comp_df, stage3_consistent_df)
+    out_path <- here("plots", data_pull_date, tfbpmodeling_version, "fig2d.svg")
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
+    save_fig2d(out_path, stage_comp_df, plot_variant="barplot", stage3_col = "stage3_bootstrap_n_interactors")
     message("Saved: ", out_path)
 }

@@ -1,0 +1,51 @@
+[
+    {
+        "interactor": "DAL80:MTH1",
+        "variant": "MTH1",
+        "r2_lasso_model": 0.16063694599036504,
+        "coef_interactor": -0.07093349575269979,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "DAL80:EAF1",
+        "variant": "EAF1",
+        "r2_lasso_model": 0.16063694599036504,
+        "coef_interactor": -0.0,
+        "coef_main_effect": -0.07664531125999918
+    },
+    {
+        "interactor": "DAL80:GZF3",
+        "variant": "GZF3",
+        "r2_lasso_model": 0.16063694599036504,
+        "coef_interactor": 0.0740784535459637,
+        "coef_main_effect": 0.06832927975014266
+    },
+    {
+        "interactor": "DAL80:FKH2",
+        "variant": "FKH2",
+        "r2_lasso_model": 0.16063694599036504,
+        "coef_interactor": -0.09697498470009318,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "DAL80:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.16063694599036504,
+        "coef_interactor": 0.0,
+        "coef_main_effect": 0.09418500576109266
+    },
+    {
+        "interactor": "DAL80:GAL4",
+        "variant": "GAL4",
+        "r2_lasso_model": 0.16063694599036504,
+        "coef_interactor": 0.0,
+        "coef_main_effect": 0.16323333975750096
+    },
+    {
+        "interactor": "DAL80:CBF1",
+        "variant": "CBF1",
+        "r2_lasso_model": 0.16063694599036504,
+        "coef_interactor": -0.0598083759696433,
+        "coef_main_effect": -0.0
+    }
+]

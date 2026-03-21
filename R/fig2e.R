@@ -2,14 +2,18 @@
 #
 # Boxplot of cross-validated variance explained (%) for each TF model across
 # four pipeline stages: Cubic Model (CV baseline), Stage 1 (all-data lasso),
-# Stage 2 (top-N lasso), Stage 3 (final interaction lasso).
+# Stage 2 (top-N lasso), Stage 3 (bootstrap lassocv interaction terms).
+#
+# v1.0.0 note: Stage 3 uses bootstrap-confirmed interaction terms from
+# ci_df_stage3_bootstrap (ci_df_stage3_bootstrap_lassocv.rds), filtered to
+# pTF:mTF interaction terms. Pre-v1.0.0 logic is in fig2e_pre_v1_0_0.R.
 #
 # Usage (import into notebook):
-#   source(here("R/paper_figures/fig2e.R"))
+#   source(here("R/fig2e.R"))
 #   plt <- make_fig2e(stages_comp_r2_df)
 #
 # `stages_comp_r2_df` columns: model <chr>, stage <fct>, var_expl <dbl>
-# Built from joining CV R² across stages (see notebook lines ~2378-2400).
+# Built by the standalone block or the fig2e_prep notebook chunk.
 
 library(here)
 library(tidyverse)
@@ -41,10 +45,9 @@ save_fig2e <- function(path, stages_comp_r2_df, width = 10, height = 7,
 }
 
 # ---------------------------------------------------------------------------
-# Helper functions (mirror notebook definitions; use input_data from the
-# calling environment — loaded in the standalone block below).
+# Helper: stratification_classification()
+# Assigns each observation to a binding-signal stratum for CV fold creation.
 # ---------------------------------------------------------------------------
-
 stratification_classification <- function(binding_vector,
                                            bins = c(0, 8, 64, 512, Inf)) {
     if (length(bins) < 2) {
@@ -58,8 +61,11 @@ stratification_classification <- function(binding_vector,
     as.integer(binding_bin)
 }
 
-# CV R² for the cubic (+ optional pre-perturbation) baseline model.
-# References `input_data` and `preperturbation_expr` from the parent env.
+# ---------------------------------------------------------------------------
+# Helper: cubic_model_cv_r2()
+# CV R^2 for the cubic (+ optional pre-perturbation) baseline model.
+# References `input_data` and `preperturbation_expr` from the calling env.
+# ---------------------------------------------------------------------------
 cubic_model_cv_r2 <- function(pTF, pval_thres = 0.1, kfolds = 4, seed = 42) {
     input_df <- create_input_df(
         pTF,
@@ -111,8 +117,11 @@ cubic_model_cv_r2 <- function(pTF, pval_thres = 0.1, kfolds = 4, seed = 42) {
     1 - sum(fold_rss) / tss_full
 }
 
-# CV R² for a lasso-selected interaction formula.
-# References `input_data` and `stratification_classification` from parent env.
+# ---------------------------------------------------------------------------
+# Helper: r2_lasso_all_data_models()
+# CV R^2 for a lasso-selected formula (main effects or interaction terms).
+# References `input_data` and `stratification_classification` from calling env.
+# ---------------------------------------------------------------------------
 r2_lasso_all_data_models <- function(pTF, interactors, cv = FALSE, kfolds = 4) {
     if (length(interactors) == 0) {
         return(tibble(
@@ -129,7 +138,7 @@ r2_lasso_all_data_models <- function(pTF, interactors, cv = FALSE, kfolds = 4) {
     )
     input_df <- create_input_df(
         pTF,
-        input_data$responses_list$residuals_normalized,
+        input_data$responses_list$log_rank_normalized,
         input_data$predictors_list$log_rank_normalized
     )
     n <- nrow(input_df)
@@ -181,41 +190,32 @@ r2_lasso_all_data_models <- function(pTF, interactors, cv = FALSE, kfolds = 4) {
 # Standalone entry point
 # ---------------------------------------------------------------------------
 if (sys.nframe() == 0L) {
-    # in general, run this once before any fig scripts
-    # source(here("R/create_predictors_response_lists.R"))
+    source(here("R/prepare_data.R"))
     source(here("R/fit_ols_model.R"))   # create_input_df
 
-    ci_all  <- readRDS(here("data/ci_df_all_data_20250805.rds"))
-    ci_topn <- readRDS(here("data/ci_df_topn_20250805.rds"))
-    stage4  <- readRDS(here("data/stage4_results_residuals_20250805.rds"))
-
-    # ---- Build sig coef lists from CI data (no Python needed) -----------
-    significant_all_data_98_df <- ci_all %>%
+    # ---- Interactor lists for each stage -----------------------------------
+    significant_all_data_98_df <- ci_df_all_data %>%
         group_by(regulator_symbol = regulator) %>%
-        summarise(interactors = list(interactor), .groups = "drop") %>%
-        mutate(n_interactors = map_int(interactors, length))
+        summarise(interactors = list(interactor), .groups = "drop")
 
-    significant_topn_90_df <- ci_topn %>%
+    significant_topn_90_df <- ci_df_topn %>%
         group_by(regulator_symbol = regulator) %>%
-        summarise(interactors = list(interactor), .groups = "drop") %>%
-        mutate(n_interactors = map_int(interactors, length))
+        summarise(interactors = list(interactor), .groups = "drop")
 
-    # ---- Flag consistent interactors ------------------------------------
-    topn_signs <- ci_topn %>%
-        dplyr::select(model = regulator, interactor, topn_sign = sign)
+    # Stage 3 (v1.0.0): bootstrap-confirmed interaction terms (pTF:mTF)
+    stage3_bootstrap_df <- ci_df_stage3_bootstrap %>%
+        filter(str_detect(interactor, ":")) %>%
+        group_by(regulator_symbol = regulator) %>%
+        summarise(interactors = list(interactor), .groups = "drop")
 
-    stage4_residuals <- stage4 %>%
-        filter(!is.na(coef_interactor)) %>%
-        left_join(topn_signs, by = c("model", "interactor")) %>%
-        mutate(consistent = sign(coef_interactor) == topn_sign)
+    # ---- TSS from original response ----------------------------------------
+    original_response_tss <- input_data$responses_list$log_rank_normalized %>%
+        pivot_longer(-target_symbol, names_to = "model", values_to = "lrr_norm") %>%
+        filter(target_symbol != model) %>%
+        group_by(model) %>%
+        reframe(tss = var(lrr_norm) * (n() - 1))
 
-    # ---- Load R data ----------------------------------------------------
-    input_data <- pull_predictor_response_lists(pull_data = FALSE,
-                                                date = "20250805")
-
-    preperturbation_expr <- read_csv(here("data/red_median_wide_20250805.csv"))
-
-    # ---- Cubic CV R² ----------------------------------------------------
+    # ---- Cubic CV R^2 -------------------------------------------------------
     message("Running cubic CV models...")
     cubic_model_cv_r2_df <- tibble(
         model    = significant_all_data_98_df$regulator_symbol,
@@ -223,26 +223,20 @@ if (sys.nframe() == 0L) {
         stage    = "cubic_model"
     )
 
-    # ---- TSS from original response -------------------------------------
-    original_response_tss <- input_data$responses_list$log_rank_normalized %>%
-        pivot_longer(-target_symbol, names_to = "model", values_to = "lrr_norm") %>%
-        filter(target_symbol != model) %>%
-        group_by(model) %>%
-        reframe(tss = var(lrr_norm) * (n() - 1))
-
-    # ---- Stage 1 CV R² --------------------------------------------------
+    # ---- Stage 1 CV R^2 -----------------------------------------------------
     message("Running Stage 1 (all-data) CV models...")
     rss_tss_res_all_data <- map2(
         significant_all_data_98_df$regulator_symbol,
         significant_all_data_98_df$interactors,
-        r2_lasso_all_data_models, cv = TRUE) %>%
+        r2_lasso_all_data_models, cv = TRUE
+    ) %>%
         bind_rows() %>%
         group_by(model) %>%
         reframe(sum_test_rss = sum(test_rss)) %>%
         left_join(original_response_tss, by = "model") %>%
         mutate(var_expl = (1 - sum_test_rss / tss) * 100, stage = "stage1")
 
-    # ---- Stage 2 CV R² --------------------------------------------------
+    # ---- Stage 2 CV R^2 -----------------------------------------------------
     message("Running Stage 2 (top-N) CV models...")
     rss_tss_res_topn <- map2(
         significant_topn_90_df$regulator_symbol,
@@ -255,32 +249,28 @@ if (sys.nframe() == 0L) {
         left_join(original_response_tss, by = "model") %>%
         mutate(var_expl = (1 - sum_test_rss / tss) * 100, stage = "stage2")
 
-    # ---- Stage 3 CV R² --------------------------------------------------
-    message("Running Stage 3 (final lasso) CV models...")
-    stage3_input_df <- stage4_residuals %>%
-        filter(consistent, complete.cases(.)) %>%
-        group_by(model) %>%
-        reframe(interactors = list(interactor))
-
+    # ---- Stage 3 CV R^2 (bootstrap lassocv interaction terms) ---------------
+    message("Running Stage 3 (bootstrap lassocv) CV models...")
     rss_tss_res_stage3 <- map2(
-        stage3_input_df$model,
-        stage3_input_df$interactors,
-        r2_lasso_all_data_models, cv = TRUE) %>%
+        stage3_bootstrap_df$regulator_symbol,
+        stage3_bootstrap_df$interactors,
+        r2_lasso_all_data_models, cv = TRUE
+    ) %>%
         bind_rows() %>%
         group_by(model) %>%
         reframe(sum_test_rss = sum(test_rss)) %>%
         left_join(original_response_tss, by = "model") %>%
         mutate(var_expl = (1 - sum_test_rss / tss) * 100, stage = "stage3")
 
-    # ---- Assemble stages_comp_r2_df -------------------------------------
+    # ---- Assemble stages_comp_r2_df ----------------------------------------
     stages_comp_r2_df <- cubic_model_cv_r2_df %>%
-        dplyr::select(model, var_expl) %>%
+        select(model, var_expl) %>%
         rename(cubic_model = var_expl) %>%
-        left_join(rss_tss_res_all_data %>% dplyr::select(model, var_expl) %>%
+        left_join(rss_tss_res_all_data %>% select(model, var_expl) %>%
                       rename(stage1 = var_expl), by = "model") %>%
-        left_join(rss_tss_res_topn %>% dplyr::select(model, var_expl) %>%
+        left_join(rss_tss_res_topn %>% select(model, var_expl) %>%
                       rename(stage2 = var_expl), by = "model") %>%
-        left_join(rss_tss_res_stage3 %>% dplyr::select(model, var_expl) %>%
+        left_join(rss_tss_res_stage3 %>% select(model, var_expl) %>%
                       rename(stage3 = var_expl), by = "model") %>%
         mutate(
             stage2 = ifelse(is.na(stage2), stage1, stage2),
@@ -293,8 +283,9 @@ if (sys.nframe() == 0L) {
             labels = c("Cubic Model", "Stage 1", "Stage 2", "Stage 3")
         ))
 
-    # ---- Save figure ----------------------------------------------------
-    out_path <- here("plots/fig2e.svg")
+    # ---- Save figure -------------------------------------------------------
+    out_path <- here("plots", data_pull_date, tfbpmodeling_version, "fig2e.svg")
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
     save_fig2e(out_path, stages_comp_r2_df)
     message("Saved: ", out_path)
 }

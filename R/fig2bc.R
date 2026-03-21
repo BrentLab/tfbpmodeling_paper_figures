@@ -203,12 +203,16 @@ save_fig2bc <- function(
 #          data/bootstrap_coefs_topn_20250805.rds (produced by prepare_data.R).
 # ---------------------------------------------------------------------------
 if (sys.nframe() == 0L) {
+    data_pull_date       <- "20250805"
+    tfbpmodeling_version <- "1.0.0"
+
     all_data_coefs <- readRDS(here("data/bootstrap_coefs_all_data_20250805.rds"))
     topn_coefs     <- readRDS(here("data/bootstrap_coefs_topn_20250805.rds"))
     ci_all         <- readRDS(here("data/ci_df_all_data_20250805.rds"))
     ci_topn        <- readRDS(here("data/ci_df_topn_20250805.rds"))
 
-    out_path <- here("plots/fig2bc.svg")
+    out_path <- here("plots", data_pull_date, tfbpmodeling_version, "fig2bc.svg")
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
     save_fig2bc(
         path                = out_path,
         all_data_coefs_list = all_data_coefs,

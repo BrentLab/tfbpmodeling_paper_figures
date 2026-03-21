@@ -1,0 +1,16 @@
+[
+    {
+        "interactor": "YHP1:OPI1",
+        "variant": "OPI1",
+        "r2_lasso_model": 0.04400793422209692,
+        "coef_interactor": -0.07396197148794184,
+        "coef_main_effect": -0.0002751191427215954
+    },
+    {
+        "interactor": "YHP1:GIS1",
+        "variant": "GIS1",
+        "r2_lasso_model": 0.04400793422209692,
+        "coef_interactor": 0.0,
+        "coef_main_effect": 0.11478286106605409
+    }
+]

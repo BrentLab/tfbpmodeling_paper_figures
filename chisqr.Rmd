@@ -1,0 +1,352 @@
+---
+title: "chisqr"
+output: html_document
+---
+
+```{r setup}
+library(tidyverse)
+library(broom)
+library(glue)
+library(here)
+library(patchwork)
+
+data_pull_date       <- "20250805"
+variant              <- "residuals"
+tfbpmodeling_version <- "1.0.0"
+
+source(here("R/prepare_data.R"))
+source(here("R/chisqr_functions.R"))
+source(here("R/theme_ptf.R"))
+```
+
+```{r}
+# Use predictors/responses already loaded by prepare_data.R.
+# `predictors_df` is the raw log-rank binding matrix; `response_df` is the raw
+# log-rank response matrix. Both are available as elements of input_data.
+
+# --- pre tfbpmodeling v1.0.0 ---
+# predictors_df = read_csv("~/htcf_ref/data/yeast_database_modelling/pull_data_20250805/data/predictors_brent_nf_cc_mcisaac_oe_20250805.csv")
+# response_df = read_csv("~/htcf_ref/data/yeast_database_modelling/pull_data_20250805/data/response_brent_nf_cc_mcisaac_oe_20250805.csv")
+
+predictors_df <- input_data$predictors_list$log_rank
+response_df   <- input_data$responses_list$log_rank
+```
+
+how many binding have minimum rank?
+
+```{r}
+predictors_df %>%
+    pivot_longer(-target_symbol,
+                 names_to = 'regulator_symbol',
+                 values_to = 'lrb_norm') %>%
+    filter(lrb_norm == 0) %>%
+    group_by(regulator_symbol) %>%
+    tally() %>%
+    pull(n) %>%
+    median()
+```
+
+
+```{r}
+# see R/prepare_input_data.R for how these are constructed
+predictors_df_norm <- input_data$predictors_list$log_rank_normalized
+response_df_norm   <- input_data$responses_list$log_rank_normalized
+```
+
+```{r}
+# stage3_consistent_df contains only interaction terms (all interactors have ":"),
+# so every model in it has at least one interaction term.
+regulators_with_lassocv_interactions <- unique(stage3_consistent_df$model)
+
+regulators_with_bootstrap_interactions <- ci_df_stage3_bootstrap %>%
+    filter(str_detect(interactor, ":")) %>%
+    pull(regulator) %>%
+    unique()
+```
+
+```{r}
+chisq_result <- list(stage3_lassocv = list(), stage3_bootstrap = list())
+
+quant_threshold_vector <- c(0.10, 0.15, 0.20)
+
+for (quant_thres in quant_threshold_vector) {
+  quant_str <- as.character(quant_thres)
+
+  chisq_result$stage3_lassocv[[quant_str]]  <- list()
+  chisq_result$stage3_bootstrap[[quant_str]] <- list()
+
+  for (reg in regulators_with_lassocv_interactions) {
+    # Build a minimal significant_predictors_list compatible with the original
+    # function: keyed by interaction term, each entry has $interactor.
+    # sig_list[[pTF]] returns NULL → compare_confidence_intervals returns "NA".
+    model_interactors <- stage3_consistent_df %>%
+        filter(model == reg) %>%
+        pull(interactor)
+    sig_list <- setNames(
+        lapply(model_interactors, function(x) list(interactor = x)),
+        model_interactors
+    )
+
+    chisq_result$stage3_lassocv[[quant_str]][[reg]] <-
+      get_interaction_term_chi_squared(
+        sig_list,
+        predictors_df_norm,
+        response_df_norm,
+        quantile_cutoff = quant_thres
+      )
+  }
+
+  for (reg in regulators_with_bootstrap_interactions) {
+    ci_df_reg <- ci_df_stage3_bootstrap %>% filter(regulator == reg)
+
+    chisq_result$stage3_bootstrap[[quant_str]][[reg]] <-
+      get_interaction_term_chi_squared_stage3_bootstrap(
+        ci_df           = ci_df_reg,
+        predictors_df   = predictors_df_norm,
+        response_df     = response_df_norm,
+        quantile_cutoff = quant_thres
+      )
+  }
+}
+```
+
+```{r}
+print_chi_squared_result <- function(model, interactor, result) {
+  # Text summary
+  cat(glue::glue(
+    "### Model: {model} — Interactor: {interactor}\n\n",
+    "**Chi2 Statistic**: {round(as.numeric(result$chi2_stat), 2)}  \n",
+    "**P-value**: {signif(as.numeric(result$pvalue), 3)}  \n",
+    "**Degrees of Freedom**: {as.numeric(result$dof)}  \n",
+    "**Main Effect Comparison**: {result$main_effect_compare}  \n",
+    "**Observed > Expected (High pTF in Bottom mTF)**: {result$Low_mTF_High_pTF_observed_gt_expected}  \n",
+    "**pTF by Low mTF Slope**: {round(as.numeric(result$ptf_by_low_mtf_slope), 2)}  \n",
+    "**pTF by High mTF Slope**: {round(as.numeric(result$ptf_by_high_mtf_slope), 2)}\n\n"
+  ))
+
+  # Expected Frequencies Table
+  cat("#### Expected Frequencies\n\n")
+  print(knitr::kable(result$expected_freq, format = "markdown"))
+
+  # Observed Frequencies Table
+  cat("\n#### Observed Contingency Table\n\n")
+  print(knitr::kable(result$raw_table, format = "markdown"))
+}
+
+# usage
+## NOTE: copy/paste this into the console to see a better print
+# print_chi_squared_result("MET32", "GAL4", chisq_result$`0.1`$MET32$`MET32:GAL4`)
+```
+
+
+```{r}
+# Derive conflicting-sign interactors from stage3_results_df (loaded by
+# prepare_data.R) by comparing the sign of coef_interactor against the
+# topn CI sign. Interactors where the signs disagree are flagged.
+
+# --- pre tfbpmodeling v1.0.0 ---
+# stage3_conflicting_sign = read_csv(here("tmp/reports/conflicting_sign_stage3_interactors_20250805.csv")) %>%
+#     mutate(interactor = str_split(interactor, ":", simplify = TRUE)[, 2],
+#            conflicting_sign = TRUE)
+
+topn_signs_for_conflict <- ci_df_topn %>%
+    select(model = regulator, interactor, topn_sign = sign)
+
+stage3_conflicting_sign <- stage3_results_df %>%
+    filter(!is.na(coef_interactor)) %>%
+    left_join(topn_signs_for_conflict, by = c("model", "interactor")) %>%
+    mutate(conflicting_sign = !is.na(topn_sign) & sign(coef_interactor) != topn_sign) %>%
+    filter(conflicting_sign) %>%
+    mutate(interactor = str_split(interactor, ":", simplify = TRUE)[, 2]) %>%
+    select(model, interactor, conflicting_sign)
+
+
+# Low_mTF_High_pTF_observed_gt_expected = chisq_res$Low_mTF_High_pTF_observed_gt_expected,
+
+extract_results_df <- function(chisquared_quantile_res) {
+    purrr::imap_dfr(
+        chisquared_quantile_res,
+        function(model_res, model_name) {
+            purrr::imap_dfr(model_res, function(chisq_res, term) {
+                tibble::tibble(
+                    model = model_name,
+                    interactor = str_split(term, ":", simplify = TRUE)[2],
+                    chi2_stat = chisq_res$chi2_stat,
+                    main_effect_comp = chisq_res$main_effect_compare,
+                    ubalanced_high_ptf = chisq_res$unbalanced_high_ptf,
+                    ptf_by_low_mtf_slope = chisq_res$ptf_by_low_mtf_slope,
+                    ptf_by_high_mtf_slope = chisq_res$ptf_by_high_mtf_slope,
+                    low_mTF_total = sum(chisq_res$raw_table[, 1]),
+                    high_mTF_total = sum(chisq_res$raw_table[, 2])
+                ) %>%
+                    left_join(stage3_conflicting_sign)
+            })
+        }
+    ) %>%
+        dplyr::arrange(dplyr::desc(chi2_stat)) %>%
+        replace_na(list(conflicting_sign = FALSE))
+}
+
+```
+
+```{r}
+df_01 <- extract_results_df(chisq_result$stage3_bootstrap$`0.15`)
+```
+
+
+
+```{r}
+# x = get_interaction_term_chi_squared(
+#     jsons$ACE2,
+#     predictors_df_norm,
+#     response_df_norm
+# )
+```
+
+```{r}
+# 20250805 HAP4:HAP2 is a conflicting sign example
+
+# plot_linear_fits(
+#     predictors_df_norm,
+#     response_df_norm,
+#     chisq_result$`0.1`,
+#     "MET32:GAL4")
+
+plot_linear_fits(
+    predictors_df_norm,
+    response_df_norm,
+    chisq_result$stage3_bootstrap$`0.15`,
+    "ZAP1:SWI4")
+```
+
+```{r}
+plot_residual_vs_binding_product <- function(
+        predictors,
+        residuals,
+        interactor_str) {
+
+    interactor_pair <- parse_interactor_pair(interactor_str)
+
+    ptf <- interactor_pair$pTF
+    mtf <- interactor_pair$mTF
+
+    ptf_styled <- str_to_sentence(ptf)
+    mtf_styled <- str_to_sentence(mtf)
+    text_size <- 22
+
+    # Join predictors and residuals
+    df <- predictors %>%
+        select(target_symbol,
+               pTF_binding = !!rlang::sym(ptf),
+               mTF_binding = !!rlang::sym(mtf)) %>%
+        inner_join(
+            residuals %>%
+                select(target_symbol = target_symbol,
+                       residual = !!rlang::sym(ptf)),
+            by = "target_symbol"
+        ) %>%
+        mutate(binding_product = pTF_binding * mTF_binding)
+
+    # Plot
+    p <- ggplot(df, aes(x = binding_product, y = residual)) +
+        geom_point(alpha = 0.7, size = 0.7) +
+        geom_smooth(method = "lm", se = FALSE, color="black") +
+        # geom_smooth(
+        #     method = "lm",
+        #     formula = y ~ poly(x, 3),  # cubic fit
+        #     se = FALSE,
+        #     linetype="dashed",
+        #     color = "purple") +
+
+        labs(
+            x = bquote(.(mtf_styled) * "*" * .(ptf_styled) * " binding " ~ "(" * LRB^2 * ")"),
+            y = paste0(ptf_styled, " response (residual LRR)")
+        ) +
+        theme_minimal(base_size = text_size) +
+        theme(
+            axis.text = element_text(color = "black", size = text_size * 0.8),
+            axis.title = element_text(color = "black", size = text_size)
+        ) +
+        coord_cartesian(xlim = c(-0.02, 1.02), ylim = c(-1,1))
+
+    return(p)
+}
+
+# `residuals_normalized` is the key used in prepare_data.R / prepare_input_data.R.
+
+# --- pre tfbpmodeling v1.0.0 ---
+# x = plot_residual_vs_binding_product(
+#     input_data$predictors_list$log_rank_normalized,
+#     input_data$responses_list$residuals,
+#     "PDR3:GAL4"
+# )
+
+x = plot_residual_vs_binding_product(
+    input_data$predictors_list$log_rank_normalized,
+    input_data$responses_list$residuals_normalized,
+    "PDR3:GAL4"
+)
+```
+
+
+## write results
+
+```{r}
+# --- pre tfbpmodeling v1.0.0 ---
+# output_dir = here("tmp/chisq_analysis_results_20250805_v5")
+
+output_dir <- here("plots", data_pull_date, tfbpmodeling_version, "chisq_analysis_results")
+
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+```
+
+```{r}
+for (variant in names(chisq_result)) {
+    variant_dir <- file.path(output_dir, variant)
+    dir.create(variant_dir, recursive = TRUE, showWarnings = FALSE)
+
+    for (quant_thres in names(chisq_result[[variant]])) {
+        df <- extract_results_df(chisq_result[[variant]][[quant_thres]])
+
+        threshold_str <- paste0("threshold_", str_replace(quant_thres, "\\.", "_"))
+
+        output_filename <- file.path(variant_dir, paste0(threshold_str, ".csv"))
+        write_csv(df, output_filename)
+
+        threshold_subdir <- file.path(variant_dir, threshold_str)
+        dir.create(file.path(threshold_subdir, "two_panel"), recursive = TRUE, showWarnings = FALSE)
+        dir.create(file.path(threshold_subdir, "residual"),  recursive = TRUE, showWarnings = FALSE)
+
+        for (model in names(chisq_result[[variant]][[quant_thres]])) {
+            for (interactor_str in names(chisq_result[[variant]][[quant_thres]][[model]])) {
+                filname_interactor_str <- str_replace(interactor_str, ":", "_")
+
+                plt_output_filename_v1 <- file.path(threshold_subdir,
+                                                     "two_panel",
+                                                     paste0("two_panel_",
+                                                            filname_interactor_str,
+                                                            ".svg"))
+                plt_v1 <- plot_linear_fits(
+                    predictors_df_norm,
+                    response_df_norm,
+                    chisq_result[[variant]][[quant_thres]],
+                    interactor_str)
+                ggsave(plt_output_filename_v1, plt_v1, bg="white", height=8, width=13)
+
+                plt_output_filename_v2 <- file.path(threshold_subdir,
+                                                     "residual",
+                                                     paste0("residual_",
+                                                            filname_interactor_str,
+                                                            ".svg"))
+                plt_v2 <- plot_residual_vs_binding_product(
+                    input_data$predictors_list$log_rank_normalized,
+                    input_data$responses_list$residuals_normalized,
+                    interactor_str)
+                ggsave(plt_output_filename_v2, plt_v2, bg="white", height=7, width=7)
+            }
+        }
+    }
+}
+```
+
+

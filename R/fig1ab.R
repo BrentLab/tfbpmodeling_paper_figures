@@ -111,6 +111,9 @@ save_fig1ab <- function(path, tf_target_counts, width = 9, height = 9,
 # (produced by prepare_data.R)
 # ---------------------------------------------------------------------------
 if (sys.nframe() == 0L) {
+    data_pull_date       <- "20250805"
+    tfbpmodeling_version <- "1.0.0"
+
     # run this separately, in general
     # source(here("R/create_predictors_response_lists.R"))
 
@@ -151,7 +154,8 @@ if (sys.nframe() == 0L) {
                                levels = c("bh", "dto"),
                                labels = c("FDR <= 0.05", "DTO")))
 
-    out_path <- here("plots/fig1ab.svg")
+    out_path <- here("plots", data_pull_date, tfbpmodeling_version, "fig1ab.svg")
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
     save_fig1ab(out_path, tf_target_counts)
     message("Saved: ", out_path)
 }

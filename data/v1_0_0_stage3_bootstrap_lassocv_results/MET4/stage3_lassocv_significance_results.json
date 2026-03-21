@@ -1,0 +1,16 @@
+[
+    {
+        "interactor": "MET4:SMP1",
+        "variant": "SMP1",
+        "r2_lasso_model": 0.05746434907529996,
+        "coef_interactor": -0.07220408561903731,
+        "coef_main_effect": -0.09800909826672079
+    },
+    {
+        "interactor": "MET4:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.05746434907529996,
+        "coef_interactor": 0.011560593117670949,
+        "coef_main_effect": 0.182265377573656
+    }
+]

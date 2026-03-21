@@ -1,317 +1,245 @@
 # prepare_data.R
 #
-# One-time data extraction script. Reads from the htcf_ref mount and external
-# Python APIs; serializes all data into data/ at the repo root so that figure
-# scripts can run without the remote mount or a Python environment.
+# Loads all serialized data from data/<data_pull_date>/ and
+# data/<data_pull_date>/<tfbpmodeling_version>/ into memory, applies
+# predictor/response transforms, and builds all derived objects needed as
+# inputs to the fig scripts. No htcf_ref mount or Python required.
 #
-# Run via:
-#   Rscript R/prepare_data.R
+# Prerequisites: the target data directories must already exist and be
+# populated. If data/<data_pull_date>/ is missing, run:
+#   Rscript R/prepare_input_data.R
+# If data/<data_pull_date>/<tfbpmodeling_version>/ is missing, run:
+#   Rscript R/prepare_results_data_v1.R   # for tfbpmodeling >= 1.0.0
+#   Rscript R/prepare_results_data.R      # for legacy results
 #
-# Or source with custom params:
-#   date    <- "20250805"
-#   variant <- "residuals"
+# `data_pull_date` is the date string identifying which versioned data pull
+# from the yeast database to use (e.g. "20250805").
+#
+# `tfbpmodeling_version` is the version of the tfbpmodeling software that was
+# used to produce the results being loaded (e.g. "1.0.0").
+#
+# Usage (source at the top of a notebook or analysis script):
+#   data_pull_date       <- "20250805"   # optional — defaults set below
+#   variant              <- "residuals"
+#   tfbpmodeling_version <- "1.0.0"
 #   source(here("R/prepare_data.R"))
 #
-# Produces (in data/):
-#   Section 1 (pure R):       predictors_list_{date}.rds, responses_list_{date}.rds
-#   Section 2 (pure R):       ci_df_all_data_{date}.rds, ci_df_topn_{date}.rds
-#   Section 3 (pure R):       stage4_results_{variant}_{date}.rds
-#   Section 4 (reticulate):   bootstrap_coefs_all_data_{date}.rds,
-#                             bootstrap_coefs_topn_{date}.rds
-#   Section 5 (reticulate):   rr_meta_{date}.csv, brent_nf_cc_meta_{date}.csv,
-#                             mcisaac_oe_meta_{date}.csv
-#   Section 6 (reticulate):   cc_usable_meta_{date}.csv, cc_usable_data_{date}.rds
-#   Section 7 (pure R):       red_median_wide_{date}.csv
+# Objects created in the calling environment:
+#   input_data               list(predictors_list, responses_list) — transformed
+#   rr_meta                  tibble — rank-response metadata
+#   predictors_meta          tibble — brent_nf_cc sample metadata
+#   response_meta            tibble — mcisaac_oe sample metadata
+#   cc_usable_meta           tibble — calling-cards replicate metadata
+#   cc_usable_data           tibble — calling-cards replicate data (long)
+#   preperturbation_expr     tibble — red_median_wide expression matrix
+#   mcisaac_kem_predictor_rr tibble — rr_meta filtered to usable pTF/response pairs
+#   ci_df_all_data           tibble — Stage 1 (all-data) CI intervals
+#   ci_df_topn               tibble — Stage 2 (top-N) CI intervals
+#   bootstrap_coefs_all_data named list — Stage 1 bootstrap coef draws per TF
+#   bootstrap_coefs_topn     named list — Stage 2 bootstrap coef draws per TF
+#   stage3_results_df        tibble — final-stage interactor significance results
+#   stage_comp_df            tibble — interactor counts per TF across all stages
+#                              (cols: regulator_symbol, all_data_n_interactors,
+#                               topn_n_interactors, stage3_lassocv_n_interactors,
+#                               stage3_bootstrap_n_interactors)
 
 library(here)
 library(tidyverse)
 library(glue)
-library(jsonlite)
-
-results_basepath <- "/home/chase/htcf_ref/data/yeast_database_modelling/results"
-results_variant  <- glue("results_{date}_{variant}")
-results_dir      <- file.path(results_basepath, date, results_variant)
-htcf_data_dir    <- glue("~/htcf_ref/data/yeast_database_modelling/pull_data_{date}/data")
-
-dir.create(here("data"), showWarnings = FALSE)
 
 # =============================================================================
-# Run directly (source these lines first, then source the script)
+# Parameters
 # =============================================================================
-date    <- "20250805"
-variant <- "residuals"
-pull_data <- FALSE # or TRUE
+# if (!exists("data_pull_date"))       data_pull_date       <- "20250805"
+# if (!exists("variant"))              variant              <- "residuals"
+# if (!exists("tfbpmodeling_version")) tfbpmodeling_version <- "1.0.0"
 
-# =============================================================================
-# create_predictors_response_lists
-# =============================================================================
+data_pull_date       <- "20250805"
+variant              <- "residuals"
+tfbpmodeling_version <- "1.0.0"
 
-library(tidyverse)
-library(here)
-library(glue)
+input_dir   <- here("data", data_pull_date)
+results_dir <- here("data", data_pull_date, tfbpmodeling_version, variant)
 
-# eg pull_data = FALSE, date = "20250801"
-pull_predictor_response_lists <- function(pull_data, date) {
-    theoretical_max <- log10(6066)
-    input_basedir <- glue("~/htcf_ref/data/yeast_database_modelling/pull_data_{date}")
-
-    if (pull_data) {
-        predictors_list <- list(
-            raw_pvalue = read_csv(file.path(input_basedir, glue("data/predictors_brent_nf_cc_mcisaac_oe_raw_pvalue_{date}.csv"))),
-            raw_enrichment = read_csv(file.path(input_basedir, glue("data/predictors_brent_nf_cc_mcisaac_oe_raw_enrichment_{date}.csv"))),
-            rank = read_csv(file.path(input_basedir, glue("data/predictors_brent_nf_cc_mcisaac_oe_rank_{date}.csv"))),
-            log_rank = read_csv(file.path(input_basedir, glue("data/predictors_brent_nf_cc_mcisaac_oe_{date}.csv")))
-        )
-        saveRDS(predictors_list, here(glue("data/predictors_list_{date}.rds")))
-
-        responses_list <- list(
-            raw = read_csv(file.path(input_basedir, glue("data/response_brent_nf_cc_mcisaac_oe_raw_{date}.csv"))),
-            rank = read_csv(file.path(input_basedir, glue("data/response_brent_nf_cc_mcisaac_oe_abs_{date}.csv"))),
-            log_rank = read_csv(file.path(input_basedir, glue("data/response_brent_nf_cc_mcisaac_oe_{date}.csv")))
-        )
-
-        norm_resid_paths <- list.files(
-            glue("~/htcf_ref/data/yeast_database_modelling/pull_data_{date}/response_frames_residuals_normalized"),
-            full.names = TRUE
-        )
-        names(norm_resid_paths) <- str_remove(basename(norm_resid_paths), ".csv")
-        norm_resid_dfs <- map(norm_resid_paths, read_csv)
-        responses_list$residuals_normalized <- reduce(norm_resid_dfs, left_join, by = "target_symbol")
-
-        saveRDS(responses_list, here(glue("data/responses_list_{date}.rds")))
-    } else {
-        predictors_list <- readRDS(here(glue("data/predictors_list_{date}.rds")))
-        responses_list <- readRDS(here(glue("data/responses_list_{date}.rds")))
-    }
-
-    # Transform predictors
-    predictors_list$rank <- predictors_list$rank %>%
-        pivot_longer(-target_symbol, names_to = "regulator", values_to = "rank") %>%
-        group_by(regulator) %>%
-        mutate(rank = -rank + max(rank)) %>%
-        pivot_wider(names_from = regulator, values_from = rank)
-
-    predictors_list$raw_pvalue <- predictors_list$raw_pvalue %>%
-        pivot_longer(-target_symbol, names_to = "regulator", values_to = "raw_pvalue") %>%
-        group_by(regulator) %>%
-        mutate(raw_pvalue = -log10(raw_pvalue + 1e-300)) %>%
-        pivot_wider(names_from = regulator, values_from = raw_pvalue)
-
-    predictors_list$log_rank_standardized <- predictors_list$log_rank %>%
-        mutate(across(where(is.numeric), ~ .x / sd(.x, na.rm = TRUE)))
-
-    predictors_list$log_rank_normalized <- predictors_list$log_rank %>%
-        mutate(across(where(is.numeric), ~ .x / theoretical_max))
-
-    # Transform responses
-    responses_list$raw <- responses_list$raw %>%
-        mutate(across(where(is.numeric), abs))
-
-    responses_list$rank <- responses_list$rank %>%
-        pivot_longer(-target_symbol, names_to = "regulator", values_to = "rank") %>%
-        group_by(regulator) %>%
-        mutate(rank = -rank + max(rank)) %>%
-        pivot_wider(names_from = regulator, values_from = rank)
-
-    responses_list$log_rank_normalized <- responses_list$log_rank %>%
-        mutate(across(
-            where(is.numeric) & !matches("target_symbol"),
-            ~ .x / theoretical_max
-        ))
-
-    responses_list$log_rank_standardized <- responses_list$log_rank %>%
-        mutate(across(where(is.numeric), ~ .x / sd(.x, na.rm = TRUE)))
-
-    list(
-        predictors_list = predictors_list,
-        responses_list = responses_list
-    )
+if (!dir.exists(input_dir)) {
+    stop(glue(
+        "Input data directory not found: {input_dir}\n",
+        "Run `Rscript R/prepare_input_data.R` first."
+    ))
+}
+if (!dir.exists(results_dir)) {
+    stop(glue(
+        "Results directory not found: {results_dir}\n",
+        "Run `Rscript R/prepare_results_data_v1.R` (or prepare_results_data.R) first.\n",
+        "Expected path: data/{data_pull_date}/{tfbpmodeling_version}/{variant}/"
+    ))
 }
 
 # =============================================================================
-# Section 1: Predictor / Response Data (pure R)
+# Input data: predictors and responses (load raw, apply transforms)
 # =============================================================================
-message("=== Section 1: predictor/response data ===")
-pull_predictor_response_lists(pull_data = pull_data, date = date)
-message("  Saved: data/predictors_list_{date}.rds, data/responses_list_{date}.rds")
+message("Loading predictors and responses...")
+
+theoretical_max <- log10(6066)
+
+predictors_list <- readRDS(file.path(input_dir, "predictors_list.rds"))
+responses_list  <- readRDS(file.path(input_dir, "responses_list.rds"))
+
+# ---- predictor transforms --------------------------------------------------
+predictors_list$rank <- predictors_list$rank %>%
+    pivot_longer(-target_symbol, names_to = "regulator", values_to = "rank") %>%
+    group_by(regulator) %>%
+    mutate(rank = -rank + max(rank)) %>%
+    pivot_wider(names_from = regulator, values_from = rank)
+
+predictors_list$raw_pvalue <- predictors_list$raw_pvalue %>%
+    pivot_longer(-target_symbol, names_to = "regulator", values_to = "raw_pvalue") %>%
+    group_by(regulator) %>%
+    mutate(raw_pvalue = -log10(raw_pvalue + 1e-300)) %>%
+    pivot_wider(names_from = regulator, values_from = raw_pvalue)
+
+predictors_list$log_rank_standardized <- predictors_list$log_rank %>%
+    mutate(across(where(is.numeric), ~ .x / sd(.x, na.rm = TRUE)))
+
+predictors_list$log_rank_normalized <- predictors_list$log_rank %>%
+    mutate(across(where(is.numeric), ~ .x / theoretical_max))
+
+# ---- response transforms ---------------------------------------------------
+responses_list$raw <- responses_list$raw %>%
+    mutate(across(where(is.numeric), abs))
+
+responses_list$rank <- responses_list$rank %>%
+    pivot_longer(-target_symbol, names_to = "regulator", values_to = "rank") %>%
+    group_by(regulator) %>%
+    mutate(rank = -rank + max(rank)) %>%
+    pivot_wider(names_from = regulator, values_from = rank)
+
+responses_list$log_rank_normalized <- responses_list$log_rank %>%
+    mutate(across(
+        where(is.numeric) & !matches("target_symbol"),
+        ~ .x / theoretical_max
+    ))
+
+responses_list$log_rank_standardized <- responses_list$log_rank %>%
+    mutate(across(where(is.numeric), ~ .x / sd(.x, na.rm = TRUE)))
+
+input_data <- list(
+    predictors_list = predictors_list,
+    responses_list  = responses_list
+)
+
+message("  Done.")
 
 # =============================================================================
-# Section 2: CI Data from result_obj.json (pure R)
-#
-# result_obj.json format: {"98.0": {"ACA1:OPI1": [-0.066, -0.027], ...}}
-# Only significant interactions are stored — each entry is already filtered.
+# Metadata
 # =============================================================================
-message("=== Section 2: CI data from result_obj.json ===")
+message("Loading metadata...")
 
-parse_ci_json <- function(result_dir_name, ci_level) {
-    json_paths <- list.files(
-        results_dir,
-        pattern     = "result_obj.json",
-        recursive   = TRUE,
-        full.names  = TRUE
+rr_meta              <- read_csv(file.path(input_dir, "rr_meta.csv"),          show_col_types = FALSE)
+predictors_meta      <- read_csv(file.path(input_dir, "brent_nf_cc_meta.csv"), show_col_types = FALSE)
+response_meta        <- read_csv(file.path(input_dir, "mcisaac_oe_meta.csv"),  show_col_types = FALSE)
+cc_usable_meta       <- read_csv(file.path(input_dir, "cc_usable_meta.csv"),   show_col_types = FALSE)
+cc_usable_data       <- readRDS(file.path(input_dir, "cc_usable_data.rds"))
+preperturbation_expr <- read_csv(file.path(input_dir, "red_median_wide.csv"),  show_col_types = FALSE)
+
+# Rank-response pairs for usable pTF / expression combinations
+mcisaac_kem_predictor_rr <- rr_meta %>%
+    filter(
+        promotersetsig %in% predictors_meta$id,
+        expression_source == "kemmeren_tfko" |
+            (expression_source == "mcisaac_oe" & expression %in% response_meta$id)
     )
-    json_paths <- json_paths[grepl(result_dir_name, json_paths, fixed = TRUE)]
 
-    map_dfr(json_paths, function(p) {
-        regulator <- basename(dirname(dirname(p)))
-        ci_data   <- read_json(p)[[ci_level]]
-        if (is.null(ci_data) || length(ci_data) == 0) return(NULL)
-        tibble(
-            regulator  = regulator,
-            interactor = names(ci_data),
-            ci_lo      = map_dbl(ci_data, 1),
-            ci_hi      = map_dbl(ci_data, 2)
-        )
-    }) %>%
-        mutate(sign = if_else(ci_lo > 0, 1L, -1L))
+message("  Done.")
+
+# =============================================================================
+# Results: CI intervals and bootstrap coefs
+# =============================================================================
+message(glue("Loading results from data/{data_pull_date}/{tfbpmodeling_version}/{variant}/..."))
+
+ci_df_all_data           <- readRDS(file.path(results_dir, "ci_df_all_data.rds"))
+ci_df_topn               <- readRDS(file.path(results_dir, "ci_df_topn.rds"))
+bootstrap_coefs_all_data <- readRDS(file.path(results_dir, "bootstrap_coefs_all_data.rds"))
+bootstrap_coefs_topn     <- readRDS(file.path(results_dir, "bootstrap_coefs_topn.rds"))
+
+# Stage results: v1 produces both stage3_lassocv_results.rds and
+# ci_df_stage3_bootstrap_lassocv.rds; legacy produces only stage3_lassocv_results.rds.
+ci_stage3_bootstrap_lassocv_path <- file.path(results_dir, "ci_df_stage3_bootstrap_lassocv.rds")
+stage_results_lassocv_path       <- file.path(results_dir, "stage3_lassocv_results.rds")
+
+if (file.exists(ci_stage3_bootstrap_lassocv_path)) {
+    ci_df_stage3_bootstrap <- readRDS(ci_stage3_bootstrap_lassocv_path)
+    message("  Loaded ci_df_stage3_bootstrap_lassocv.rds")
+    message("  Loaded stage3_lassocv_results.rds")
+} else {
+    message("No stage3 results discovered for {variant}")
 }
 
-ci_df_all_data <- parse_ci_json("all_data_result_object", "98.0")
-ci_df_topn     <- parse_ci_json("topn_result_object",     "90.0")
+stage3_results_df <- readRDS(stage_results_lassocv_path)
+message("  Loaded stage3_lassocv_results.rds (non-bootstrapped)")
 
-saveRDS(ci_df_all_data, here(glue("data/ci_df_all_data_{date}.rds")))
-saveRDS(ci_df_topn,     here(glue("data/ci_df_topn_{date}.rds")))
-message(glue("  Saved: data/ci_df_all_data_{date}.rds ({nrow(ci_df_all_data)} rows)"))
-message(glue("  Saved: data/ci_df_topn_{date}.rds ({nrow(ci_df_topn)} rows)"))
+message("  Done.")
 
 # =============================================================================
-# Section 3: Stage 4 Results from interactor_vs_main_result.json (pure R)
+# Derived objects (cheap — no model fitting)
 # =============================================================================
-message("=== Section 3: stage4 results ===")
+message("Building derived objects...")
 
-models <- list.files(results_dir, include.dirs = TRUE, full.names = FALSE)
+# Interactor counts per TF for Stage 1 and Stage 2
+significant_all_data_df <- ci_df_all_data %>%
+    count(regulator, name = "all_data_n_interactors") %>%
+    dplyr::rename(regulator_symbol = regulator)
 
-stage4_list <- map(models, function(model) {
-    json_path <- file.path(results_dir, model, "interactor_vs_main_result.json")
-    if (file.exists(json_path)) {
-        df        <- read_json(json_path, simplifyVector = TRUE)
-        df$model  <- model
-    } else {
-        df <- data.frame(
-            interactor       = NA_character_,
-            variant          = NA_character_,
-            r2_lasso_model   = NA_real_,
-            coef_interactor  = NA_real_,
-            coef_main_effect = NA_real_,
-            model            = model
-        )
-    }
-    df
-})
+significant_topn_df <- ci_df_topn %>%
+    count(regulator, name = "topn_n_interactors") %>%
+    dplyr::rename(regulator_symbol = regulator)
 
-stage4_df <- bind_rows(stage4_list) %>% as_tibble()
+# Flag consistent interactors: coef sign in stage_results matches topn CI sign
+topn_signs <- ci_df_topn %>%
+    select(model = regulator, interactor, topn_sign = sign)
 
-saveRDS(stage4_df, here(glue("data/stage4_results_{variant}_{date}.rds")))
-message(glue("  Saved: data/stage4_results_{variant}_{date}.rds ({nrow(stage4_df)} rows)"))
+stage3_consistent_df <- stage3_results_df %>%
+    filter(!is.na(coef_interactor)) %>%
+    left_join(topn_signs, by = c("model", "interactor")) %>%
+    mutate(consistent = sign(coef_interactor) == topn_sign) %>%
+    filter(consistent, complete.cases(.))
 
-# =============================================================================
-# Section 4: Bootstrap Coefficient Draws (reticulate — requires .venv + pkl)
-# =============================================================================
-message("=== Section 4: bootstrap coefficient draws (requires Python) ===")
+surviving_stage3_lassocv_df = stage3_consistent_df %>%
+    count(model, name = "stage3_lassocv_n_interactors") %>%
+    dplyr::rename(regulator_symbol = model)
 
-library(reticulate)
-use_virtualenv(here(".venv"), required = TRUE)
-
-py_run_string(glue("
-import pickle
-from pathlib import Path
-import pandas as pd
-
-results_dir = '{results_dir}'
-models      = [p.name for p in Path(results_dir).iterdir() if p.is_dir()]
-
-def load_coefs(result_dir_name):
-    out = {{}}
-    for reg in models:
-        pkl_path = Path(results_dir, reg, result_dir_name, 'result_obj.pkl')
-        if pkl_path.exists():
-            with open(pkl_path, 'rb') as f:
-                bootstrap_coefs_df, alpha_list = pickle.load(f)
-            out[reg] = bootstrap_coefs_df
-    return out
-
-all_data_coefs_py = load_coefs('all_data_result_object')
-topn_coefs_py     = load_coefs('topn_result_object')
-"))
-
-all_data_coefs <- map(py$all_data_coefs_py, as_tibble)
-topn_coefs     <- map(py$topn_coefs_py, as_tibble)
-
-saveRDS(all_data_coefs, here(glue("data/bootstrap_coefs_all_data_{date}.rds")))
-saveRDS(topn_coefs,     here(glue("data/bootstrap_coefs_topn_{date}.rds")))
-message(glue("  Saved: data/bootstrap_coefs_all_data_{date}.rds ({length(all_data_coefs)} regulators)"))
-message(glue("  Saved: data/bootstrap_coefs_topn_{date}.rds ({length(topn_coefs)} regulators)"))
-
-# =============================================================================
-# Section 5: Rank-Response Metadata (reticulate — tfbpapi)
-# =============================================================================
-message("=== Section 5: rank-response metadata (requires tfbpapi) ===")
-
-py_run_string("
-import asyncio
-from tfbpapi import RankResponseAPI
-loop = asyncio.get_event_loop()
-rr_api = RankResponseAPI()
-rr_res  = loop.run_until_complete(rr_api.read())
-")
-
-rr_meta <- py$rr_res$metadata %>% as_tibble()
-write_csv(rr_meta, here(glue("data/rr_meta_{date}.csv")))
-message(glue("  Saved: data/rr_meta_{date}.csv ({nrow(rr_meta)} rows)"))
-
-# Copy predictor and response metadata from htcf_ref
-file.copy(
-    file.path(htcf_data_dir, glue("brent_nf_cc_meta_{date}.csv")),
-    here(glue("data/brent_nf_cc_meta_{date}.csv")),
-    overwrite = TRUE
+surviving_stage3_bootstrap_df = tryCatch(
+    ci_df_stage3_bootstrap %>%
+        mutate(interaction_term = str_detect(interactor, ":")) %>%
+        filter(interaction_term) %>%
+        count(regulator, name = "stage3_bootstrap_n_interactors") %>%
+        dplyr::rename(regulator_symbol = regulator),
+    error = function(e) tibble(regulator_symbol = character(), stage3_bootstrap_n_interactors = integer())
 )
-file.copy(
-    file.path(htcf_data_dir, glue("mcisaac_oe_meta_{date}.csv")),
-    here(glue("data/mcisaac_oe_meta_{date}.csv")),
-    overwrite = TRUE
+
+all_model_names <- tibble(
+    regulator_symbol = intersect(colnames(input_data$responses_list$log_rank_standardized),
+                                 colnames((input_data$predictors_list$raw_pvalue)))[-1]
 )
-message(glue("  Copied: data/brent_nf_cc_meta_{date}.csv, data/mcisaac_oe_meta_{date}.csv"))
 
-# =============================================================================
-# Section 6: Calling-Cards Replicate Data (reticulate — tfbpapi)
-# =============================================================================
-message("=== Section 6: calling-cards replicate data (requires tfbpapi) ===")
+stage_comp_df <- all_model_names %>%
+    left_join(significant_topn_df) %>%
+    left_join(significant_all_data_df) %>%
+    left_join(surviving_stage3_bootstrap_df) %>%
+    left_join(surviving_stage3_lassocv_df) %>%
+    replace_na(list(all_data_n_interactors = 0L,
+                    topn_n_interactors = 0L,
+                    stage3_lassocv_n_interactors = 0L,
+                    stage3_bootstrap_n_interactors = 0L)) %>%
+    dplyr::relocate(regulator_symbol,
+                    all_data_n_interactors,
+                    topn_n_interactors,
+                    stage3_lassocv_n_interactors,
+                    stage3_bootstrap_n_interactors) %>%
+    arrange(desc(all_data_n_interactors))
 
-py_run_string("
-import asyncio
-from tfbpapi import PromoterSetSigAPI
-loop    = asyncio.get_event_loop()
-pss_api = PromoterSetSigAPI()
-pss_api.pop_params()
-pss_api.push_params({'source_name': 'brent_nf_cc', 'data_usable': 'pass'})
-cc_usable_res = loop.run_until_complete(pss_api.read(retrieve_files=True))
-")
-
-cc_usable_meta <- py$cc_usable_res$metadata %>%
-    as_tibble() %>%
-    filter(!is.na(single_binding))
-
-cc_usable_data <- map(cc_usable_meta$id, ~ {
-    py$cc_usable_res$data[[as.character(.)]] %>% as_tibble()
-}) %>% bind_rows()
-
-write_csv(cc_usable_meta, here(glue("data/cc_usable_meta_{date}.csv")))
-saveRDS(cc_usable_data,   here(glue("data/cc_usable_data_{date}.rds")))
-message(glue("  Saved: data/cc_usable_meta_{date}.csv ({nrow(cc_usable_meta)} replicates)"))
-message(glue("  Saved: data/cc_usable_data_{date}.rds ({nrow(cc_usable_data)} rows)"))
-
-# =============================================================================
-# Section 7: Pre-Perturbation Expression (pure R — file copy)
-# =============================================================================
-message("=== Section 7: pre-perturbation expression ===")
-
-file.copy(
-    file.path(htcf_data_dir, "red_median_wide.csv"),
-    here(glue("data/red_median_wide_{date}.csv")),
-    overwrite = TRUE
-)
-message(glue("  Copied: data/red_median_wide_{date}.csv"))
+message("  Done.")
 
 # =============================================================================
 message("=== prepare_data.R complete ===")
-message("All data objects written to data/")
+message(glue("Data loaded from data/{data_pull_date}/ and data/{data_pull_date}/{tfbpmodeling_version}/{variant}/"))
