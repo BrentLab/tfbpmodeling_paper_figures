@@ -315,9 +315,14 @@ source(here("R/fig2d.R"))
 
 save_fig2d(
     path          = file.path(plots_dir, "fig2d.svg"),
-    stage_comp_df = stage_comp_df
+    stage_comp_df = stage_comp_df,
+    stage3_col = "stage3_bootstrap_n_interactors",
+    include_0_interactors = FALSE,
 )
-make_fig2d(stage_comp_df)
+
+make_fig2d(stage_comp_df,
+           stage3_col = "stage3_bootstrap_n_interactors",
+           include_0_interactors = FALSE)
 ```
 
 ---

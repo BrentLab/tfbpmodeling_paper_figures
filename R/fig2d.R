@@ -19,13 +19,25 @@
 
 library(here)
 library(tidyverse)
+library(glue)
 source(here("R/theme_ptf.R"))
 
-# ---------------------------------------------------------------------------
-# Internal: shared long-format data prep
-# ---------------------------------------------------------------------------
-.build_fig2d_long <- function(stage_comp_df, stage3_col) {
-    stage_comp_df %>%
+#' create the long format dataframe with columns model, stage, n_interactors
+#'
+#' @param stage_comp_df wide format with columns regulator_symbol,
+#'    all_data_n_interactors, topn_n_interactors, stage3_lassocv_n_interactors,
+#'    stage3_bootstrap_n_interactors
+#' @param stage3_col which of the stage3 columns to use
+#' @param include_0_interactors Default TRUE. Whether or not to include
+#'     the 0 interactor value on in the dataframe
+#'
+#' @return a dataframe in long format with columns model
+#'     (renamed regulator_symbol), stage, n_interactors
+.build_fig2d_long <- function(stage_comp_df,
+                              stage3_col,
+                              include_0_interactors = TRUE) {
+    message(glue::glue("Using column {stage3_col}"))
+    out = stage_comp_df %>%
         select(model = regulator_symbol,
                all_data_n_interactors,
                topn_n_interactors,
@@ -40,6 +52,13 @@ source(here("R/theme_ptf.R"))
                 labels = c("stage1", "stage2", "stage3")
             )
         )
+
+    if(include_0_interactors){
+        out
+    } else{
+        filter(out, n_interactors != 0)
+    }
+
 }
 
 # ---------------------------------------------------------------------------
@@ -48,12 +67,13 @@ source(here("R/theme_ptf.R"))
 make_fig2d <- function(
         stage_comp_df,
         stage3_col    = c("stage3_lassocv_n_interactors", "stage3_bootstrap_n_interactors"),
+        include_0_interactors = TRUE,
         plot_variant  = c("barplot", "lineplot", "boxplot"),
         base_size     = 18
 ) {
     plot_variant <- match.arg(plot_variant)
     stage3_col = match.arg(stage3_col)
-    df_long <- .build_fig2d_long(stage_comp_df, stage3_col)
+    df_long <- .build_fig2d_long(stage_comp_df, stage3_col, include_0_interactors)
 
     stage_colors <- c(
         "stage1" = "#F8766D",
