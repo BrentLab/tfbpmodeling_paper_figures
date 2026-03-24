@@ -1,0 +1,30 @@
+[
+    {
+        "interactor": "XBP1:OPI1",
+        "variant": "OPI1",
+        "r2_lasso_model": 0.10310852188680675,
+        "coef_interactor": -0.06427566076453078,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "XBP1:INO4",
+        "variant": "INO4",
+        "r2_lasso_model": 0.10310852188680675,
+        "coef_interactor": -0.0710308122154104,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "XBP1:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.10310852188680675,
+        "coef_interactor": 0.10376077439728185,
+        "coef_main_effect": 0.043273396204363684
+    },
+    {
+        "interactor": "XBP1:GAL80",
+        "variant": "GAL80",
+        "r2_lasso_model": 0.10310852188680675,
+        "coef_interactor": -0.04832070174451746,
+        "coef_main_effect": -0.0
+    }
+]

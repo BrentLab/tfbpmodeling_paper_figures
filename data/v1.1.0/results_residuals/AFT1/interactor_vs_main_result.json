@@ -1,0 +1,16 @@
+[
+    {
+        "interactor": "AFT1:DAT1",
+        "variant": "DAT1",
+        "r2_lasso_model": 0.07980478951743875,
+        "coef_interactor": -0.12950720499696403,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "AFT1:GAL4",
+        "variant": "GAL4",
+        "r2_lasso_model": 0.07980478951743875,
+        "coef_interactor": 0.08517270973237154,
+        "coef_main_effect": 0.08715504930243746
+    }
+]

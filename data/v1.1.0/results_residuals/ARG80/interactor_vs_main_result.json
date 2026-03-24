@@ -1,0 +1,9 @@
+[
+    {
+        "interactor": "ARG80:GAL4",
+        "variant": "GAL4",
+        "r2_lasso_model": 0.07476029089155345,
+        "coef_interactor": 0.00405711269896414,
+        "coef_main_effect": 0.18861540757466677
+    }
+]

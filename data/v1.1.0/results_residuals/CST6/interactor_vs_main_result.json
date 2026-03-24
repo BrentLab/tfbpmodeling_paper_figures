@@ -1,0 +1,30 @@
+[
+    {
+        "interactor": "CST6:ARG81",
+        "variant": "ARG81",
+        "r2_lasso_model": 0.1700263759835,
+        "coef_interactor": -0.08542504729182994,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "CST6:GIS1",
+        "variant": "GIS1",
+        "r2_lasso_model": 0.1700263759835,
+        "coef_interactor": 0.09552745546143081,
+        "coef_main_effect": 0.09384381470444957
+    },
+    {
+        "interactor": "CST6:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.1700263759835,
+        "coef_interactor": 0.06920169844215371,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "CST6:ASH1",
+        "variant": "ASH1",
+        "r2_lasso_model": 0.1700263759835,
+        "coef_interactor": -0.10180867467647486,
+        "coef_main_effect": -0.0
+    }
+]

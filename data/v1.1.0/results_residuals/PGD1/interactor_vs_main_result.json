@@ -1,0 +1,23 @@
+[
+    {
+        "interactor": "PGD1:SWI6",
+        "variant": "SWI6",
+        "r2_lasso_model": 0.08314192679762766,
+        "coef_interactor": -0.07345908314635316,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "PGD1:ARG81",
+        "variant": "ARG81",
+        "r2_lasso_model": 0.08314192679762766,
+        "coef_interactor": -0.09256238500656064,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "PGD1:GIS1",
+        "variant": "GIS1",
+        "r2_lasso_model": 0.08314192679762766,
+        "coef_interactor": 0.09884867433212238,
+        "coef_main_effect": 0.0
+    }
+]

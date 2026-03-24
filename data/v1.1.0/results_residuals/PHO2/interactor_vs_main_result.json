@@ -1,0 +1,9 @@
+[
+    {
+        "interactor": "PHO2:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.03221489262115396,
+        "coef_interactor": 0.018810557767259314,
+        "coef_main_effect": 0.1084689527893802
+    }
+]

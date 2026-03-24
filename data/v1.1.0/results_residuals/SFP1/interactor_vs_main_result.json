@@ -1,0 +1,16 @@
+[
+    {
+        "interactor": "SFP1:FKH2",
+        "variant": "FKH2",
+        "r2_lasso_model": 0.03517089509282112,
+        "coef_interactor": -0.04297347039733124,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "SFP1:TEA1",
+        "variant": "TEA1",
+        "r2_lasso_model": 0.03517089509282112,
+        "coef_interactor": -0.05922928223586561,
+        "coef_main_effect": -0.0
+    }
+]

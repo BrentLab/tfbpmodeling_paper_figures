@@ -9,7 +9,7 @@
 # populated. If data/<data_pull_date>/ is missing, run:
 #   Rscript R/prepare_input_data.R
 # If data/<data_pull_date>/<tfbpmodeling_version>/ is missing, run:
-#   Rscript R/prepare_results_data_v1.R   # for tfbpmodeling >= 1.0.0
+#   Rscript R/prepare_results_data.R   # for tfbpmodeling >= 1.0.0
 #   Rscript R/prepare_results_data.R      # for legacy results
 #
 # `data_pull_date` is the date string identifying which versioned data pull
@@ -70,7 +70,7 @@ if (!dir.exists(input_dir)) {
 if (!dir.exists(results_dir)) {
     stop(glue(
         "Results directory not found: {results_dir}\n",
-        "Run `Rscript R/prepare_results_data_v1.R` (or prepare_results_data.R) first.\n",
+        "Run `Rscript R/prepare_results_data.R` (or prepare_results_data.R) first.\n",
         "Expected path: data/{data_pull_date}/{tfbpmodeling_version}/{variant}/"
     ))
 }

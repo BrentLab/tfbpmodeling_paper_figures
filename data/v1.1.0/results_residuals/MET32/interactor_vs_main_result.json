@@ -1,0 +1,16 @@
+[
+    {
+        "interactor": "MET32:GAL4",
+        "variant": "GAL4",
+        "r2_lasso_model": 0.09943748943277408,
+        "coef_interactor": 0.16522028787403364,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "MET32:CBF1",
+        "variant": "CBF1",
+        "r2_lasso_model": 0.09943748943277408,
+        "coef_interactor": -0.049474904744242265,
+        "coef_main_effect": -0.0
+    }
+]

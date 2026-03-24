@@ -1,0 +1,23 @@
+[
+    {
+        "interactor": "NRG1:MET31",
+        "variant": "MET31",
+        "r2_lasso_model": 0.09898919480074664,
+        "coef_interactor": -0.0,
+        "coef_main_effect": -0.16291174939899827
+    },
+    {
+        "interactor": "NRG1:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.09898919480074664,
+        "coef_interactor": -0.04680511143603148,
+        "coef_main_effect": 0.2399106154141076
+    },
+    {
+        "interactor": "NRG1:GAL80",
+        "variant": "GAL80",
+        "r2_lasso_model": 0.09898919480074664,
+        "coef_interactor": -0.0,
+        "coef_main_effect": -0.13819746333289484
+    }
+]

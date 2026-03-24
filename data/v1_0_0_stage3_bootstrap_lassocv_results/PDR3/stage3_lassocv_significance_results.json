@@ -1,9 +1,0 @@
-[
-    {
-        "interactor": "PDR3:GAL4",
-        "variant": "GAL4",
-        "r2_lasso_model": 0.0939542839826164,
-        "coef_interactor": 0.14280070242007878,
-        "coef_main_effect": 0.0
-    }
-]

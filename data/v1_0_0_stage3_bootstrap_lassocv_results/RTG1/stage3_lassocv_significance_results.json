@@ -1,9 +1,0 @@
-[
-    {
-        "interactor": "RTG1:GIS1",
-        "variant": "GIS1",
-        "r2_lasso_model": 0.04511900876886865,
-        "coef_interactor": 0.022508025588685636,
-        "coef_main_effect": 0.14324378142616018
-    }
-]

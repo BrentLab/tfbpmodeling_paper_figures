@@ -1,0 +1,44 @@
+[
+    {
+        "interactor": "PDR1:ARG81",
+        "variant": "ARG81",
+        "r2_lasso_model": 0.14089417660466474,
+        "coef_interactor": -0.06833193555909599,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "PDR1:GZF3",
+        "variant": "GZF3",
+        "r2_lasso_model": 0.14089417660466474,
+        "coef_interactor": -0.08121986643381392,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "PDR1:UPC2",
+        "variant": "UPC2",
+        "r2_lasso_model": 0.14089417660466474,
+        "coef_interactor": -0.07654271863251264,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "PDR1:GIS1",
+        "variant": "GIS1",
+        "r2_lasso_model": 0.14089417660466474,
+        "coef_interactor": 0.10209371770680632,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "PDR1:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.14089417660466474,
+        "coef_interactor": 0.11432133037636934,
+        "coef_main_effect": 0.017610705358112735
+    },
+    {
+        "interactor": "PDR1:CSE2",
+        "variant": "CSE2",
+        "r2_lasso_model": 0.14089417660466474,
+        "coef_interactor": -0.0,
+        "coef_main_effect": -0.10323949985193305
+    }
+]

@@ -1,0 +1,9 @@
+[
+    {
+        "interactor": "STB5:GAL4",
+        "variant": "GAL4",
+        "r2_lasso_model": 0.026778657555982743,
+        "coef_interactor": 0.07120101117385966,
+        "coef_main_effect": 0.0
+    }
+]
