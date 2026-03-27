@@ -53,7 +53,7 @@ source(here("R/fit_ols_model.R"))
 # ---------------------------------------------------------------------------
 make_figS2A <- function(
         input_data,
-        pTF        = "PDR3",
+        pTF        = "INO4",
         mTF        = "GAL4",
         ylim_left  = c(0, 1),
         ylim_right = c(-0.2, 0.75),
