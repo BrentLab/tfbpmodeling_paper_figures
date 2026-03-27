@@ -6170,8 +6170,8 @@
 <text x='193.54' y='312.64' text-anchor='middle' style='font-size: 14.40px; font-family: "Arimo";' textLength='28.00px' lengthAdjust='spacingAndGlyphs'>0.50</text>
 <text x='249.21' y='312.64' text-anchor='middle' style='font-size: 14.40px; font-family: "Arimo";' textLength='28.00px' lengthAdjust='spacingAndGlyphs'>0.75</text>
 <text x='304.88' y='312.64' text-anchor='middle' style='font-size: 14.40px; font-family: "Arimo";' textLength='28.00px' lengthAdjust='spacingAndGlyphs'>1.00</text>
-<text x='193.08' y='332.49' text-anchor='middle' style='font-size: 18.00px; font-family: "Arimo";' textLength='82.03px' lengthAdjust='spacingAndGlyphs'>INO4 LRB</text>
-<text transform='translate(26.83,154.55) rotate(-90)' text-anchor='middle' style='font-size: 18.00px; font-family: "Arimo";' textLength='83.03px' lengthAdjust='spacingAndGlyphs'>INO4 LRR</text>
+<text x='193.08' y='332.49' text-anchor='middle' style='font-size: 18.00px; font-family: "Arimo";' textLength='75.06px' lengthAdjust='spacingAndGlyphs'>Ino4 LRB</text>
+<text transform='translate(26.83,154.55) rotate(-90)' text-anchor='middle' style='font-size: 18.00px; font-family: "Arimo";' textLength='76.06px' lengthAdjust='spacingAndGlyphs'>Ino4 LRR</text>
 </g>
 <defs>
   <clipPath id='cpMzg5LjY0fDYzMy41NXwxNC40NXwyOTQuNjY='>
@@ -12286,16 +12286,16 @@
 <text x='531.02' y='312.64' text-anchor='middle' style='font-size: 14.40px; font-family: "Arimo";' textLength='20.00px' lengthAdjust='spacingAndGlyphs'>0.3</text>
 <text x='574.45' y='312.64' text-anchor='middle' style='font-size: 14.40px; font-family: "Arimo";' textLength='20.00px' lengthAdjust='spacingAndGlyphs'>0.4</text>
 <text x='617.88' y='312.64' text-anchor='middle' style='font-size: 14.40px; font-family: "Arimo";' textLength='20.00px' lengthAdjust='spacingAndGlyphs'>0.5</text>
-<text x='433.32' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='42.02px' lengthAdjust='spacingAndGlyphs'>INO4</text>
-<text x='475.34' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='7.00px' lengthAdjust='spacingAndGlyphs'>*</text>
-<text x='482.34' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='46.03px' lengthAdjust='spacingAndGlyphs'>GAL4</text>
-<text x='528.37' y='337.94' style='font-size: 18.00px; font-family: "Standard Symbols PS";' textLength='4.50px' lengthAdjust='spacingAndGlyphs'> </text>
-<text x='532.87' y='337.94' style='font-size: 22.50px; font-family: "Standard Symbols PS";' textLength='7.50px' lengthAdjust='spacingAndGlyphs'>(</text>
-<text x='540.37' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='10.02px' lengthAdjust='spacingAndGlyphs'>L</text>
-<text x='550.38' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='13.00px' lengthAdjust='spacingAndGlyphs'>R</text>
-<text x='563.37' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='12.00px' lengthAdjust='spacingAndGlyphs'>B</text>
-<text x='575.37' y='328.91' style='font-size: 12.60px; font-family: "Arimo";' textLength='7.00px' lengthAdjust='spacingAndGlyphs'>2</text>
-<text x='582.38' y='337.94' style='font-size: 22.50px; font-family: "Standard Symbols PS";' textLength='7.50px' lengthAdjust='spacingAndGlyphs'>)</text>
+<text x='440.80' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='35.05px' lengthAdjust='spacingAndGlyphs'>Ino4</text>
+<text x='475.85' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='7.00px' lengthAdjust='spacingAndGlyphs'>*</text>
+<text x='482.86' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='38.03px' lengthAdjust='spacingAndGlyphs'>Gal4</text>
+<text x='520.89' y='337.94' style='font-size: 18.00px; font-family: "Standard Symbols PS";' textLength='4.50px' lengthAdjust='spacingAndGlyphs'> </text>
+<text x='525.39' y='337.94' style='font-size: 22.50px; font-family: "Standard Symbols PS";' textLength='7.50px' lengthAdjust='spacingAndGlyphs'>(</text>
+<text x='532.88' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='10.02px' lengthAdjust='spacingAndGlyphs'>L</text>
+<text x='542.89' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='13.00px' lengthAdjust='spacingAndGlyphs'>R</text>
+<text x='555.89' y='337.94' style='font-size: 18.00px; font-family: "Arimo";' textLength='12.00px' lengthAdjust='spacingAndGlyphs'>B</text>
+<text x='567.89' y='328.91' style='font-size: 12.60px; font-family: "Arimo";' textLength='7.00px' lengthAdjust='spacingAndGlyphs'>2</text>
+<text x='574.89' y='337.94' style='font-size: 22.50px; font-family: "Standard Symbols PS";' textLength='7.50px' lengthAdjust='spacingAndGlyphs'>)</text>
 <text transform='translate(345.35,154.55) rotate(-90)' text-anchor='middle' style='font-size: 18.00px; font-family: "Arimo";' textLength='130.09px' lengthAdjust='spacingAndGlyphs'>Cubic Residuals</text>
 </g>
 </g>

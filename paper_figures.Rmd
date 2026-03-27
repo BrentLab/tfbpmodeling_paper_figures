@@ -446,10 +446,10 @@ source(here("R/figS2A.R"))
 save_figS2A(
     path       = file.path(plots_dir, "figS2A.svg"),
     input_data = input_data,
-    pTF        = "PDR3",
+    pTF        = "INO4",
     mTF        = "GAL4"
 )
-make_figS2A(input_data, pTF = "PDR3", mTF = "GAL4")
+make_figS2A(input_data, pTF = "INO4", mTF = "GAL4")
 ```
 
 ---

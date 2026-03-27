@@ -72,8 +72,8 @@ make_figS2A <- function(
             se      = FALSE
         ) +
         coord_cartesian(ylim = ylim_left) +
-        ylab(paste0(pTF, " LRR")) +
-        xlab(paste0(pTF, " LRB")) +
+        ylab(paste0(stringr::str_to_sentence(pTF), " LRR")) +
+        xlab(paste0(stringr::str_to_sentence(pTF), " LRB")) +
         theme_ptf(base_size = base_size)
 
     right_panel <- ggplot(df_residuals, aes(x = interaction, y = response)) +
@@ -81,7 +81,7 @@ make_figS2A <- function(
         coord_cartesian(ylim = ylim_right) +
         geom_smooth(method = "lm", formula = y ~ x, se = FALSE) +
         ylab("Cubic Residuals") +
-        xlab(bquote(.(pTF) * "*" * .(mTF) ~ (LRB^2))) +
+        xlab(bquote(.(stringr::str_to_sentence(pTF)) * "*" * .(stringr::str_to_sentence(mTF)) ~ (LRB^2))) +
         theme_ptf(base_size = base_size)
 
     left_panel + right_panel
