@@ -451,3 +451,51 @@ save_figS2A(
 )
 make_figS2A(input_data, pTF = "PDR3", mTF = "GAL4")
 ```
+
+---
+
+## Fig S1A–C: TCC vs ChIP-chip binding comparison
+
+`figS1A` uses `matplotlib_venn` via reticulate. The virtualenv must be
+activated before any reticulate call fires, so it is set here.
+
+```{r figS1-setup}
+library(reticulate)
+use_virtualenv(here(".venv"), required = TRUE)
+
+source(here("R/figS1A.R"))
+source(here("R/figS1B.R"))
+source(here("R/figS1C.R"))
+
+s1_ints <- .compute_s1_intersects(predictors_meta, response_meta, harb_meta, rr_meta)
+```
+
+### Fig S1A: Venn diagram (TCC vs ChIP-chip significant TFs)
+
+```{r figS1A}
+figS1A_path <- file.path(plots_dir, "figS1A.svg")
+save_figS1A(figS1A_path, s1_ints$harbison, s1_ints$cc)
+knitr::include_graphics(figS1A_path)
+```
+
+### Fig S1B: DTO p-value boxplot (TCC vs ChIP-chip)
+
+```{r figS1B}
+save_figS1B(
+    path                  = file.path(plots_dir, "figS1B.svg"),
+    harbison_rr_intersect = s1_ints$harbison,
+    cc_rr_intersect       = s1_ints$cc
+)
+make_figS1B(s1_ints$harbison, s1_ints$cc)
+```
+
+### Fig S1C: rank_25 response rate boxplot (TCC vs ChIP-chip)
+
+```{r figS1C}
+save_figS1C(
+    path                  = file.path(plots_dir, "figS1C.svg"),
+    harbison_rr_intersect = s1_ints$harbison,
+    cc_rr_intersect       = s1_ints$cc
+)
+make_figS1C(s1_ints$harbison, s1_ints$cc)
+```

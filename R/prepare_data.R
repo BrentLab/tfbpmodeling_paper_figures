@@ -29,6 +29,7 @@
 #   rr_meta                  tibble — rank-response metadata
 #   predictors_meta          tibble — brent_nf_cc sample metadata
 #   response_meta            tibble — mcisaac_oe sample metadata
+#   harb_meta                tibble — Harbison ChIP-chip PSS metadata
 #   cc_usable_meta           tibble — calling-cards replicate metadata
 #   cc_usable_data           tibble — calling-cards replicate data (long)
 #   preperturbation_expr     tibble — red_median_wide expression matrix
@@ -134,6 +135,7 @@ message("Loading metadata...")
 rr_meta              <- read_csv(file.path(input_dir, "rr_meta.csv"),          show_col_types = FALSE)
 predictors_meta      <- read_csv(file.path(input_dir, "brent_nf_cc_meta.csv"), show_col_types = FALSE)
 response_meta        <- read_csv(file.path(input_dir, "mcisaac_oe_meta.csv"),  show_col_types = FALSE)
+harb_meta            <- read_csv(file.path(input_dir, "harb_meta.csv"),        show_col_types = FALSE)
 cc_usable_meta       <- read_csv(file.path(input_dir, "cc_usable_meta.csv"),   show_col_types = FALSE)
 cc_usable_data       <- readRDS(file.path(input_dir, "cc_usable_data.rds"))
 preperturbation_expr <- read_csv(file.path(input_dir, "red_median_wide.csv"),  show_col_types = FALSE)

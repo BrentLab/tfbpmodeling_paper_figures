@@ -1,0 +1,135 @@
+# figS1B.R
+#
+# Boxplot of DTO empirical p-value (−log10 scale) comparing TCC vs ChIP-chip
+# binding data across the shared regulator set.
+#
+# Usage (import into a notebook):
+#   source(here("R/figS1B.R"))
+#   ints <- .compute_s1_intersects(predictors_meta, response_meta, harb_meta, rr_meta)
+#   plt  <- make_figS1B(ints$harbison, ints$cc)
+#
+# `predictors_meta` — brent_nf_cc metadata (must have composite_binding col)
+# `response_meta`   — mcisaac_oe metadata
+# `harb_meta`       — Harbison ChIP-chip PSS metadata (data/{date}/harb_meta.csv)
+# `rr_meta`         — rank-response metadata (data/{date}/rr_meta.csv)
+
+library(here)
+library(tidyverse)
+source(here("R/theme_ptf.R"))
+
+.tcc_color      <- "#3B4CC0"
+.chipchip_color <- "#FDE725"
+
+# ---------------------------------------------------------------------------
+# .compute_s1_intersects()
+#
+# Builds harbison_rr_intersect and cc_rr_intersect from raw metadata and
+# rr_meta.
+#
+# Returns a named list: list(harbison = <tibble>, cc = <tibble>)
+# Each tibble has columns: regulator_symbol, rank_25, dto_empirical_pvalue,
+# binding_source.
+# ---------------------------------------------------------------------------
+.compute_s1_intersects <- function(predictors_meta, response_meta, harb_meta, rr_meta) {
+    valid_harb_ids <- harb_meta %>%
+        filter(regulator_symbol %in% unique(predictors_meta$regulator_symbol)) %>%
+        filter(regulator_symbol %in% unique(response_meta$regulator_symbol)) %>%
+        pull(id)
+
+    harbison_rr_intersect <- rr_meta %>%
+        filter(expression %in% response_meta$id) %>%
+        filter(promotersetsig %in% valid_harb_ids) %>%
+        select(regulator_symbol, rank_25, dto_empirical_pvalue) %>%
+        mutate(binding_source = "ChIP-chip")
+
+    cc_is_composite <- predictors_meta %>%
+        mutate(is_composite = !is.na(composite_binding)) %>%
+        select(id, is_composite)
+
+    cc_rr_intersect <- rr_meta %>%
+        filter(expression %in% response_meta$id) %>%
+        filter(binding_source == "brent_nf_cc",
+               regulator_symbol %in% harbison_rr_intersect$regulator_symbol) %>%
+        left_join(cc_is_composite, by = c("promotersetsig" = "id")) %>%
+        group_by(regulator_symbol) %>%
+        reframe(
+            rank_25 = if (any(is_composite, na.rm = TRUE)) {
+                rank_25[which(is_composite)[1]]
+            } else {
+                max(rank_25, na.rm = TRUE)
+            },
+            dto_empirical_pvalue = if (any(is_composite, na.rm = TRUE)) {
+                dto_empirical_pvalue[which(is_composite)[1]]
+            } else {
+                min(dto_empirical_pvalue, na.rm = TRUE)
+            }
+        ) %>%
+        mutate(binding_source = "TCC")
+
+    list(harbison = harbison_rr_intersect, cc = cc_rr_intersect)
+}
+
+# ---------------------------------------------------------------------------
+# make_figS1B()
+#
+# Parameters
+# ----------
+# harbison_rr_intersect  tibble — $harbison from .compute_s1_intersects()
+# cc_rr_intersect        tibble — $cc from .compute_s1_intersects()
+# base_size              passed to theme_ptf()
+# pval_epsilon           floor added before −log10 (default 1e-3)
+#
+# Returns a ggplot object.
+# ---------------------------------------------------------------------------
+make_figS1B <- function(harbison_rr_intersect, cc_rr_intersect,
+                         base_size = 18, pval_epsilon = 1e-3) {
+    bind_rows(harbison_rr_intersect, cc_rr_intersect) %>%
+        select(regulator_symbol, binding_source, dto_empirical_pvalue) %>%
+        mutate(
+            binding_source       = factor(binding_source, levels = c("TCC", "ChIP-chip")),
+            dto_empirical_pvalue = -log10(dto_empirical_pvalue + pval_epsilon)
+        ) %>%
+        ungroup() %>%
+        ggplot(aes(binding_source, dto_empirical_pvalue, fill = binding_source)) +
+        geom_boxplot(width = 0.9) +
+        scale_fill_manual(values = c("TCC"       = .tcc_color,
+                                     "ChIP-chip" = .chipchip_color)) +
+        scale_y_continuous(
+            breaks = 0:5,
+            labels = function(x) format(10^-x, scientific = FALSE)
+        ) +
+        labs(x = "Binding Data Source", y = "DTO Empirical p-value") +
+        theme_ptf(base_size = base_size) +
+        theme(legend.position = "none")
+}
+
+# ---------------------------------------------------------------------------
+# save_figS1B()
+# ---------------------------------------------------------------------------
+save_figS1B <- function(path, harbison_rr_intersect, cc_rr_intersect,
+                         width = 8, height = 8, bg = "white", ...) {
+    plt <- make_figS1B(harbison_rr_intersect, cc_rr_intersect, ...)
+    ggsave(path, plt, device = "svg", bg = bg, width = width, height = height)
+    invisible(plt)
+}
+
+# ---------------------------------------------------------------------------
+# Standalone entry point
+# ---------------------------------------------------------------------------
+if (sys.nframe() == 0L) {
+    data_pull_date       <- "20250805"
+    tfbpmodeling_version <- "1.1.0"
+
+    input_dir <- here("data", data_pull_date)
+    rr_meta         <- read_csv(file.path(input_dir, "rr_meta.csv"),          show_col_types = FALSE)
+    predictors_meta <- read_csv(file.path(input_dir, "brent_nf_cc_meta.csv"), show_col_types = FALSE)
+    response_meta   <- read_csv(file.path(input_dir, "mcisaac_oe_meta.csv"),  show_col_types = FALSE)
+    harb_meta       <- read_csv(file.path(input_dir, "harb_meta.csv"),        show_col_types = FALSE)
+
+    ints <- .compute_s1_intersects(predictors_meta, response_meta, harb_meta, rr_meta)
+
+    out_path <- here("plots", data_pull_date, tfbpmodeling_version, "figS1B.svg")
+    dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
+    save_figS1B(out_path, ints$harbison, ints$cc)
+    message("Saved: ", out_path)
+}

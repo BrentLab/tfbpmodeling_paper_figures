@@ -21,6 +21,7 @@
 #   Section 5 (reticulate):   rr_meta.csv, brent_nf_cc_meta.csv,
 #                             mcisaac_oe_meta.csv
 #   Section 6 (reticulate):   cc_usable_meta.csv, cc_usable_data.rds
+#   Section 8 (reticulate):   harb_meta.csv
 #   Section 7 (pure R):       red_median_wide.csv
 
 library(here)
@@ -130,6 +131,22 @@ write_csv(cc_usable_meta, file.path(data_dir, "cc_usable_meta.csv"))
 saveRDS(cc_usable_data,   file.path(data_dir, "cc_usable_data.rds"))
 message(glue("  Saved: data/{data_pull_date}/cc_usable_meta.csv ({nrow(cc_usable_meta)} replicates)"))
 message(glue("  Saved: data/{data_pull_date}/cc_usable_data.rds ({nrow(cc_usable_data)} rows)"))
+
+# =============================================================================
+# Section 8: Harbison ChIP-chip Promoter-Set Metadata (reticulate — tfbpapi)
+# =============================================================================
+message("=== Section 8: Harbison ChIP-chip metadata (requires tfbpapi) ===")
+
+py_run_string("
+pss_api.pop_params()
+pss_api.push_params({'source_name': 'harbison_chip', 'preferred_replicate': 'true'})
+harb_res = loop.run_until_complete(pss_api.read())
+pss_api.pop_params()
+")
+
+harb_meta <- py$harb_res$metadata %>% as_tibble()
+write_csv(harb_meta, file.path(data_dir, "harb_meta.csv"))
+message(glue("  Saved: data/{data_pull_date}/harb_meta.csv ({nrow(harb_meta)} rows)"))
 
 # =============================================================================
 # Section 7: Pre-Perturbation Expression (pure R — file copy)
