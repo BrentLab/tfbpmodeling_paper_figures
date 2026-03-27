@@ -1,6 +1,6 @@
 # tfbpmodeling_paper_figures
 
-Publication figures for the tfbpmodeling yeast TF regulatory network paper.
+Publication figures for the tfbpmodeling yeast TF regulatory network paper.  
 
 ## Structure
 
@@ -10,49 +10,19 @@ data/           Serialized data objects (gitignored)
 plots/          Output SVGs (gitignored)
 ```
 
-## Data pipeline
+The `data/` directory stores the results from tfbpmodeling in `data/vx.x.x`, 
+eg `data/v1.1.0`. The processed results are stored under the data freeze 
+date and the processed results are stored under the datafreeze date and
+the tfbpmodeling version, eg `data/20250805` and `data/20250805/1.0.0`. See
+`R/prepare_input_data.R` (note: this will not run because the database will not 
+be up. However, all of the data that this produces is already stored in `data`, 
+so there is no need) and `R/prepare_results_data.R`.
 
-Run once to populate `data/` from the htcf mount. Requires Python/reticulate
-for sections 4–6.
+## Notebooks and figure scripts
 
-```r
-date      <- "20250805"
-variant   <- "residuals"
-pull_data <- TRUE
-source(here("R/prepare_data.R"))
-```
-
-Set `pull_data <- FALSE` to reload from already-serialized RDS files without
-hitting the htcf mount.
-
-## Figure scripts
-
-Each `R/fig*.R` exports `make_<fig>(...)` returning a ggplot/patchwork object
-and `save_<fig>(path, ...)` which calls `ggsave()`. Source the script and pass
-pre-built data objects:
-
-```r
-source(here("R/fig1ab.R"))
-plt <- make_fig1ab(tf_target_counts)
-```
-
-Shared helpers sourced by the figure scripts:
-
-| File | Provides |
-|------|---------|
-| `R/theme_ptf.R` | `theme_ptf()` ggplot theme |
-| `R/fit_ols_model.R` | `create_input_df()`, `fit_ols_model()` |
-| `R/create_predictors_response_lists.R` | `pull_predictor_response_lists()` |
-
-## Figure index
-
-| Script | Figure |
-|--------|--------|
-| `fig1ab.R` | TF binding-set size distributions (FDR vs DTO) |
-| `fig1b1.R` | Replicate vs TF-TF Pearson correlation |
-| `fig1cd.R` | R² linear vs cubic across four data transforms |
-| `fig1efgh.R` | Scatter panels with linear and cubic fits for a pTF |
-| `fig2bc.R` | Bootstrap coefficient boxplots, Stage 1 vs Stage 2 |
-| `fig2d.R` | Interactor counts per stage |
-| `fig2e.R` | CV variance explained across pipeline stages |
-| `figS2A.R` | PDR3×GAL4 cubic fit and interaction scatter |
+The notebook `paper_figures.Rmd` and `chisqr.Rmd` both produce figures that
+are used in the paper. With the virtual environment installed via
+`reticulate` (use `requirements.txt`), you can run each to produce all of the
+figures in `plots/`. You can also run the figure creation scripts individually.
+Scroll down to the bottom of each file in `R/` for code that will run in the
+console to individually create a figure.
