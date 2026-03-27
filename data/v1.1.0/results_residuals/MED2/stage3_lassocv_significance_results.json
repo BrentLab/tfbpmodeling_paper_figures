@@ -1,0 +1,30 @@
+[
+    {
+        "interactor": "MED2:OPI1",
+        "variant": "OPI1",
+        "r2_lasso_model": 0.17219451072212688,
+        "coef_interactor": -0.06252371025278472,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "MED2:MET31",
+        "variant": "MET31",
+        "r2_lasso_model": 0.17219451072212688,
+        "coef_interactor": -0.08881484699448176,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "MED2:GIS1",
+        "variant": "GIS1",
+        "r2_lasso_model": 0.17219451072212688,
+        "coef_interactor": 0.0,
+        "coef_main_effect": 0.1252761882137012
+    },
+    {
+        "interactor": "MED2:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.17219451072212688,
+        "coef_interactor": 0.06652269452289579,
+        "coef_main_effect": 0.08888823200057547
+    }
+]

@@ -1,0 +1,23 @@
+[
+    {
+        "interactor": "CUP9:GIS1",
+        "variant": "GIS1",
+        "r2_lasso_model": 0.08430843235541663,
+        "coef_interactor": 0.00279944636436731,
+        "coef_main_effect": 0.18188940805696405
+    },
+    {
+        "interactor": "CUP9:FKH1",
+        "variant": "FKH1",
+        "r2_lasso_model": 0.08430843235541663,
+        "coef_interactor": 0.08840638157668516,
+        "coef_main_effect": -0.24389448626920873
+    },
+    {
+        "interactor": "CUP9:ERT1",
+        "variant": "ERT1",
+        "r2_lasso_model": 0.08430843235541663,
+        "coef_interactor": -0.11662636266047056,
+        "coef_main_effect": -0.003090441964260528
+    }
+]

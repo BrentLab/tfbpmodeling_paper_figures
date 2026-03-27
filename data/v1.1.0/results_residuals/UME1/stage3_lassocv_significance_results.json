@@ -1,0 +1,23 @@
+[
+    {
+        "interactor": "UME1:INO4",
+        "variant": "INO4",
+        "r2_lasso_model": 0.07981329446147645,
+        "coef_interactor": -0.032544124044836795,
+        "coef_main_effect": -0.05994636624863112
+    },
+    {
+        "interactor": "UME1:FKH2",
+        "variant": "FKH2",
+        "r2_lasso_model": 0.07981329446147645,
+        "coef_interactor": -0.05932681025896896,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "UME1:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.07981329446147645,
+        "coef_interactor": 0.10503106040498818,
+        "coef_main_effect": 0.0
+    }
+]

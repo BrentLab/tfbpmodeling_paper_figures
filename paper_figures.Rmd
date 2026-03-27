@@ -21,7 +21,7 @@ library(patchwork)
 
 data_pull_date       <- "20250805"
 variant              <- "residuals"
-tfbpmodeling_version <- "1.0.0"
+tfbpmodeling_version <- "1.1.0"
 
 source(here("R/prepare_data.R"))
 source(here("R/fit_ols_model.R"))

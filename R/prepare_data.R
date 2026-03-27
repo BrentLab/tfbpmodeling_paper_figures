@@ -50,13 +50,9 @@ library(glue)
 # =============================================================================
 # Parameters
 # =============================================================================
-# if (!exists("data_pull_date"))       data_pull_date       <- "20250805"
-# if (!exists("variant"))              variant              <- "residuals"
-# if (!exists("tfbpmodeling_version")) tfbpmodeling_version <- "1.0.0"
-
-data_pull_date       <- "20250805"
-variant              <- "residuals"
-tfbpmodeling_version <- "1.0.0"
+if (!exists("data_pull_date"))       data_pull_date       <- "20250805"
+if (!exists("variant"))              variant              <- "residuals"
+if (!exists("tfbpmodeling_version")) tfbpmodeling_version <- "1.1.0"
 
 input_dir   <- here("data", data_pull_date)
 results_dir <- here("data", data_pull_date, tfbpmodeling_version, variant)

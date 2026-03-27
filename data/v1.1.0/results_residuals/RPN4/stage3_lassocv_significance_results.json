@@ -1,0 +1,16 @@
+[
+    {
+        "interactor": "RPN4:ACE2",
+        "variant": "ACE2",
+        "r2_lasso_model": 0.049700457969917955,
+        "coef_interactor": -0.02802940947617349,
+        "coef_main_effect": -0.09716595317654546
+    },
+    {
+        "interactor": "RPN4:MBP1",
+        "variant": "MBP1",
+        "r2_lasso_model": 0.049700457969917955,
+        "coef_interactor": 0.0,
+        "coef_main_effect": -0.12615805462810936
+    }
+]

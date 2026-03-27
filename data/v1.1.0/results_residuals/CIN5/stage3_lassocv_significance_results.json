@@ -1,0 +1,23 @@
+[
+    {
+        "interactor": "CIN5:OPI1",
+        "variant": "OPI1",
+        "r2_lasso_model": 0.07924168059025172,
+        "coef_interactor": -0.06623382045579775,
+        "coef_main_effect": -0.011559166473472842
+    },
+    {
+        "interactor": "CIN5:EAF1",
+        "variant": "EAF1",
+        "r2_lasso_model": 0.07924168059025172,
+        "coef_interactor": -0.06426804607330415,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "CIN5:IXR1",
+        "variant": "IXR1",
+        "r2_lasso_model": 0.07924168059025172,
+        "coef_interactor": 0.10288983073217842,
+        "coef_main_effect": 0.0
+    }
+]

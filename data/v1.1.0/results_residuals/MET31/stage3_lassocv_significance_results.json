@@ -1,0 +1,30 @@
+[
+    {
+        "interactor": "MET31:DIG1",
+        "variant": "DIG1",
+        "r2_lasso_model": 0.10719205914811936,
+        "coef_interactor": -0.09330604305386914,
+        "coef_main_effect": 0.07577259877269797
+    },
+    {
+        "interactor": "MET31:SMP1",
+        "variant": "SMP1",
+        "r2_lasso_model": 0.10719205914811936,
+        "coef_interactor": -0.06183700417992081,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "MET31:TUP1",
+        "variant": "TUP1",
+        "r2_lasso_model": 0.10719205914811936,
+        "coef_interactor": 0.042314868174948304,
+        "coef_main_effect": 0.06135845441379916
+    },
+    {
+        "interactor": "MET31:GAL4",
+        "variant": "GAL4",
+        "r2_lasso_model": 0.10719205914811936,
+        "coef_interactor": 0.1178889562586783,
+        "coef_main_effect": -0.0
+    }
+]

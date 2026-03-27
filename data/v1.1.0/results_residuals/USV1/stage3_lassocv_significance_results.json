@@ -1,0 +1,30 @@
+[
+    {
+        "interactor": "USV1:WTM1",
+        "variant": "WTM1",
+        "r2_lasso_model": 0.12646351177192028,
+        "coef_interactor": 0.027570642955496584,
+        "coef_main_effect": -0.23989901823417634
+    },
+    {
+        "interactor": "USV1:PGD1",
+        "variant": "PGD1",
+        "r2_lasso_model": 0.12646351177192028,
+        "coef_interactor": 0.04360899377962073,
+        "coef_main_effect": 0.131805963414643
+    },
+    {
+        "interactor": "USV1:AZF1",
+        "variant": "AZF1",
+        "r2_lasso_model": 0.12646351177192028,
+        "coef_interactor": -0.2688772402358232,
+        "coef_main_effect": 0.2639083450383115
+    },
+    {
+        "interactor": "USV1:GIS1",
+        "variant": "GIS1",
+        "r2_lasso_model": 0.12646351177192028,
+        "coef_interactor": 0.05063654206954695,
+        "coef_main_effect": 0.03115165628037812
+    }
+]

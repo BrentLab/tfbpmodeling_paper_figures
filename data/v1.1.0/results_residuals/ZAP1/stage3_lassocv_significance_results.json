@@ -1,0 +1,16 @@
+[
+    {
+        "interactor": "ZAP1:SWI4",
+        "variant": "SWI4",
+        "r2_lasso_model": 0.0556689910975795,
+        "coef_interactor": -0.0752089389269748,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "ZAP1:MSN2",
+        "variant": "MSN2",
+        "r2_lasso_model": 0.0556689910975795,
+        "coef_interactor": 0.0019856089182284454,
+        "coef_main_effect": 0.14319077296204358
+    }
+]

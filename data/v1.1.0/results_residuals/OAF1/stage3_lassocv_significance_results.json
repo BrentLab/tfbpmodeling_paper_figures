@@ -1,0 +1,23 @@
+[
+    {
+        "interactor": "OAF1:RGM1",
+        "variant": "RGM1",
+        "r2_lasso_model": 0.12321206521519212,
+        "coef_interactor": 0.11514383588198605,
+        "coef_main_effect": -0.017584772985765905
+    },
+    {
+        "interactor": "OAF1:PGD1",
+        "variant": "PGD1",
+        "r2_lasso_model": 0.12321206521519212,
+        "coef_interactor": -0.10317195701427405,
+        "coef_main_effect": 0.3605777141556085
+    },
+    {
+        "interactor": "OAF1:MBP1",
+        "variant": "MBP1",
+        "r2_lasso_model": 0.12321206521519212,
+        "coef_interactor": -0.03728281577168937,
+        "coef_main_effect": -0.09636145599307208
+    }
+]

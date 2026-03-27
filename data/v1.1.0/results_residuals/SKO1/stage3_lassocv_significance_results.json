@@ -1,0 +1,9 @@
+[
+    {
+        "interactor": "SKO1:OPI1",
+        "variant": "OPI1",
+        "r2_lasso_model": 0.024208490824318418,
+        "coef_interactor": -0.08257134713065258,
+        "coef_main_effect": -0.013035416335593884
+    }
+]

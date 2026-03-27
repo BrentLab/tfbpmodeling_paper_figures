@@ -1,0 +1,37 @@
+[
+    {
+        "interactor": "HAP4:OPI1",
+        "variant": "OPI1",
+        "r2_lasso_model": 0.32617486513851957,
+        "coef_interactor": -0.19260524431466577,
+        "coef_main_effect": 0.16400284933313244
+    },
+    {
+        "interactor": "HAP4:HAP3",
+        "variant": "HAP3",
+        "r2_lasso_model": 0.32617486513851957,
+        "coef_interactor": 0.12277747346862836,
+        "coef_main_effect": 0.048186156404616515
+    },
+    {
+        "interactor": "HAP4:SMP1",
+        "variant": "SMP1",
+        "r2_lasso_model": 0.32617486513851957,
+        "coef_interactor": -0.31829769010972864,
+        "coef_main_effect": 0.2674155580013362
+    },
+    {
+        "interactor": "HAP4:HAP2",
+        "variant": "HAP2",
+        "r2_lasso_model": 0.32617486513851957,
+        "coef_interactor": -0.05727088093867571,
+        "coef_main_effect": 0.3407019147426765
+    },
+    {
+        "interactor": "HAP4:GAL80",
+        "variant": "GAL80",
+        "r2_lasso_model": 0.32617486513851957,
+        "coef_interactor": 0.066773712344273,
+        "coef_main_effect": -0.22310699669510153
+    }
+]

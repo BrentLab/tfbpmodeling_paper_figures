@@ -1,0 +1,23 @@
+[
+    {
+        "interactor": "SKN7:HAA1",
+        "variant": "HAA1",
+        "r2_lasso_model": 0.1756463859370061,
+        "coef_interactor": -0.12981443946326035,
+        "coef_main_effect": 0.039075912770138936
+    },
+    {
+        "interactor": "SKN7:GIS1",
+        "variant": "GIS1",
+        "r2_lasso_model": 0.1756463859370061,
+        "coef_interactor": 0.17406584901789146,
+        "coef_main_effect": 0.06871542531698606
+    },
+    {
+        "interactor": "SKN7:PPR1",
+        "variant": "PPR1",
+        "r2_lasso_model": 0.1756463859370061,
+        "coef_interactor": -0.17345402163643492,
+        "coef_main_effect": 0.15660644825680675
+    }
+]

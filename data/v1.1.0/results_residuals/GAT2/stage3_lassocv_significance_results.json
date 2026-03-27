@@ -1,0 +1,23 @@
+[
+    {
+        "interactor": "GAT2:DAT1",
+        "variant": "DAT1",
+        "r2_lasso_model": 0.08406482671639914,
+        "coef_interactor": -0.08053235238664581,
+        "coef_main_effect": 0.0
+    },
+    {
+        "interactor": "GAT2:FKH2",
+        "variant": "FKH2",
+        "r2_lasso_model": 0.08406482671639914,
+        "coef_interactor": -0.08630668517876029,
+        "coef_main_effect": -0.0
+    },
+    {
+        "interactor": "GAT2:TUP1",
+        "variant": "TUP1",
+        "r2_lasso_model": 0.08406482671639914,
+        "coef_interactor": 0.0,
+        "coef_main_effect": 0.20132471278966643
+    }
+]

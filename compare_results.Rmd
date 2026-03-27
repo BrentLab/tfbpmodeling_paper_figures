@@ -17,9 +17,9 @@ source(here("R/prepare_data.R"))
 
 ```{r input}
 models = list(
-    old = basename(list.dirs("~/htcf_ref/data/yeast_database_modelling/results/20250805/results_20250805_residuals",
+    old = basename(list.dirs("~/htcf_ref/data/yeast_database_modelling/results/20250805/unversioned/results_20250805_residuals",
                      recursive = FALSE)),
-    new = basename(list.dirs("~/htcf_local/tfmodeling/results_residuals",
+    new = basename(list.dirs("~/htcf_ref/data/yeast_database_modelling/results/20250805/v1.1.0/results_residuals",
                    recursive = FALSE))
 )
 
@@ -60,10 +60,10 @@ get_paths = function(model,
 #     ...
 #   )
 path_list = map(models$old, get_paths,
-                "~/htcf_ref/data/yeast_database_modelling/results/20250805/results_20250805_residuals",
+                "~/htcf_ref/data/yeast_database_modelling/results/20250805/unversioned/results_20250805_residuals",
                 "interactor_vs_main_result.json",
-                "~/htcf_ref/data/yeast_database_modelling/results/20250805/v1.0.0/results_20250805_residuals",
-                "interactor_vs_main_result.json")
+                "~/htcf_ref/data/yeast_database_modelling/results/20250805/v1.1.0/results_residuals",
+                "stage3_lassocv_significance_results.json")
 names(path_list) = models$old
 
 
